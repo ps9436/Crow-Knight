@@ -15,6 +15,12 @@ enum class CrowState {
     Attack
 };
 
+enum class AttackType {
+    Side,
+    Up,
+    Down
+};
+
 class Crow {
     public:
         // Actual main.cpp setup
@@ -23,10 +29,12 @@ class Crow {
         void Draw();
         void Unload();
 
-        // Insider help
+        // Helpers
         void SetPosition(Vector2 pos);
         Vector2 GetPosition() const { return position; }
         Animation& GetAnimation();
+        Animation& GetAttackAnimation();
+        void StartAttack(Input input);
     private:
         Vector2 position{};
 
@@ -37,19 +45,33 @@ class Crow {
         float zVelocity = 0.0f;        // Vertical (jump) velocity
         bool onGround = true;
         bool faceRight = false;
-        bool attacking = true;
+        
+        bool isAttacking = false;
+        AttackType attack { AttackType::Side };
+        struct AttackTimeline {
+            AttackType type;
+            int activeStartFrame;
+            int activeEndFrame;
+
+            bool hitboxOn = false;
+            bool finished = false;
+            bool dashCanceled = false;
+        };
 
         // int scale{ 1 };
         CrowForm form { CrowForm::Undead };
         void Stab();    // Switch from Undead/Alive
+
         CrowState state { CrowState::Idle };
+        void DetermineState(Input input);
         void SetState(CrowState newState);
 
         Animation aliveIdle;
         Animation aliveRun;
         Animation aliveJump;
         Animation sideAttack;
-
+        Animation upAttack;
+        Animation downAttack;
         Animation undeadIdle;
         Animation undeadRun;
         Animation undeadJump;

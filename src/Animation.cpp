@@ -58,6 +58,11 @@ void Animation::Reset() {
     frameRec.x = 0.0f;
 }
 
+bool Animation::IsFinished() const {
+    // Has animation ended or not
+    return (!loop) && (currentFrame >= totalFrames - 1);
+}
+
 void Animation::Unload() {
     UnloadTexture(texture);
 }

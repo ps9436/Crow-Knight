@@ -6,6 +6,7 @@ void Crow::Init(Vector2 startPos, int spriteScale) {
     position = startPos;
     form = CrowForm::Undead;
     state = CrowState::Idle;
+    attack = AttackType::Side;
 
     // Animations
     undeadIdle.Init("assets/Charles-Idle(Undead)-Sheet.png", 6, 8.0f, position, spriteScale);
@@ -15,6 +16,9 @@ void Crow::Init(Vector2 startPos, int spriteScale) {
     aliveRun.Init("assets/Charles-Run-Sheet.png", 3, 12.0f, position, spriteScale);
     aliveJump.Init("assets/Charles-Jump-Sheet.png", 4, 16.0f, position, spriteScale, false);
     sideAttack.Init("assets/Charles-SideAttack-Sheet.png", 5, 20.0f, position, spriteScale, false);
+    upAttack.Init("assets/Charles-UpAttack-Sheet.png", 5, 16.0f, position, spriteScale, false);
+    downAttack.Init("assets/Charles-DownAttack-Sheet.png", 5, 16.0f, position, spriteScale, false);
+
 }
 
 void Crow::Update(Input input) {
@@ -27,28 +31,7 @@ void Crow::Update(Input input) {
     position.x += input.moveX * moveSpeed * dt;
     position.y += input.moveY * moveSpeed * dt;
 
-    if (input.jumped && onGround) {
-        onGround = false;
-        zVelocity = jumpPower;
-        SetState(CrowState::Jump);
-        GetAnimation().Reset();
-    }
-
-    if (!onGround) {
-        SetState(CrowState::Jump);
-    } else {
-        if ((input.moveX || input.moveY) != 0) {
-            SetState(CrowState::Run);
-            if (input.moveX > 0) faceRight = true;
-            else if (input.moveX < 0) faceRight = false;
-        } else if (input.attacked) {
-            SetState(CrowState::Attack);
-            GetAnimation().Reset();
-        } else {
-            SetState(CrowState::Idle);
-        }
-    }
-    
+    DetermineState(input);
 
     // We're in the air
     if (!onGround) {
@@ -68,6 +51,11 @@ void Crow::Update(Input input) {
     Animation& anim = GetAnimation();
     anim.SetPosition(drawPos);
     anim.Update();
+
+    if (isAttacking && anim.IsFinished()) {
+        isAttacking = false;
+        GetAnimation().SetPosition(drawPos);
+    }
 }
 
 void Crow::Draw() {
@@ -90,6 +78,8 @@ void Crow::SetPosition(Vector2 pos) {
 }
 
 Animation& Crow::GetAnimation() {
+    if (isAttacking) return GetAttackAnimation();
+
     if (form == CrowForm::Undead) {
         switch (state) {
         case CrowState::Idle:   return undeadIdle;
@@ -103,10 +93,34 @@ Animation& Crow::GetAnimation() {
         case CrowState::Idle:   return aliveIdle;
         case CrowState::Run:    return aliveRun;
         case CrowState::Jump:   return aliveJump;
-        case CrowState::Attack: return sideAttack;
         }
     }
-    // return undeadIdle;
+    return undeadIdle;
+}
+
+Animation& Crow::GetAttackAnimation() {
+    if (form == CrowForm::Alive) {
+        switch (attack) {
+        case AttackType::Side:  return sideAttack;
+        case AttackType::Up:    return upAttack;
+        case AttackType::Down:  return downAttack;
+        }
+    }
+    return undeadIdle;
+}
+
+void Crow::StartAttack(Input input) {
+    if (isAttacking || form == CrowForm::Undead) return;
+
+    // Determine direction
+    if (input.moveY < 0) attack = AttackType::Up;
+    else if (input.moveY > 0) attack = AttackType::Down;
+    else attack = AttackType::Side;
+
+    isAttacking = true;
+
+    Animation& animAttack = GetAnimation();
+    animAttack.Reset();
 }
 
 void Crow::Unload() {
@@ -122,7 +136,34 @@ void Crow::Stab() {
     else                          form = CrowForm::Undead;
 }
 
+void Crow::DetermineState(Input input) {
+    if (input.attacked) StartAttack(input);
+    if (!isAttacking) {
+        if (input.jumped && onGround) {
+            onGround = false;
+            zVelocity = jumpPower;
+            SetState(CrowState::Jump);
+            GetAnimation().Reset();
+        }
+
+        if (!onGround) {
+            SetState(CrowState::Jump);
+        } else {
+            if ((input.moveX || input.moveY) != 0) {
+                SetState(CrowState::Run);
+                if (input.moveX > 0) faceRight = true;
+                else if (input.moveX < 0) faceRight = false;
+            // } else if (input.attacked) {
+            //     SetState(CrowState::Attack);
+            //     GetAnimation().Reset();
+            } else {
+                SetState(CrowState::Idle);
+            }
+        }
+    }
+}
+
 void Crow::SetState(CrowState newState) {
-   if (state == newState) return;
-   state = newState;
+    if (state == newState) return;
+    state = newState;
 }
