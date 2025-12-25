@@ -8,7 +8,9 @@ enum class CharacterState {
     IDLE,
     RUN,
     JUMP,
-    ATTACK,
+    ATTACK_SIDE,
+    ATTACK_UP,
+    ATTACK_DOWN,
     HURT,
     DEATH
 };
@@ -32,6 +34,16 @@ class Character {
 
         // Helper to streamline loading
         void AddAnimation(CharacterState state, Animation anim);
+        // Helper to check if current state is in any attacks
+        bool IsAttacking() const {
+            return currentState == CharacterState::ATTACK_SIDE || 
+                   currentState == CharacterState::ATTACK_UP || 
+                   currentState == CharacterState::ATTACK_DOWN;
+        }
+        // Helper to check if we are state where we can't move
+        bool IsLocked() const {
+            return currentState == CharacterState::DEATH;
+        }
 
         // Virtual so specific characters can override it for special logic
         virtual void OnStateSwitch(CharacterState oldState, CharacterState newState) {}

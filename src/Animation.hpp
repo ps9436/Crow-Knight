@@ -19,12 +19,15 @@ struct Animation {
         loop = shouldLoop;
     }
    
-    void Animation::Update(float dt) {
+    void Update(float dt) {
         timer += dt;        // dt is the time (s) that passed since the last frame
-        if (timer >= frameSpeed) {
+        if (timer >= (1.0f / frameSpeed)) {
             timer = 0.0f;
             if (loop) {
-                currentFrame = (currentFrame + 1) % totalFrames;
+                currentFrame++;
+                if (currentFrame >= totalFrames) {
+                    currentFrame = 0;
+                }
             } else {
                 if (currentFrame < totalFrames - 1) currentFrame++;
                 // else: stay on the last frame
@@ -32,7 +35,7 @@ struct Animation {
         }
     }
 
-    void Animation::Draw(Vector2 position, bool flipH) {
+    void Draw(Vector2 position, bool flipH) {
         float width = (float)texture.width / totalFrames;
         float height = (float)texture.height;
 

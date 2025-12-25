@@ -3,15 +3,15 @@
 void Character::Update(float dt) {
 
     // X/Y movement
-    position.x = velocity.x * dt;
-    position.y = velocity.y * dt;
+    position.x += velocity.x * dt;
+    position.y += velocity.y * dt;
 
     // Z-axis
     zVelocity -= gravity * dt;
     z += zVelocity * dt;
 
     // Ground collision
-    if (z >= 0.0f) {
+    if (z <= 0.0f) {
         z = 0.0f;
         zVelocity = 0.0f;
         onGround = true;

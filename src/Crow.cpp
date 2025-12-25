@@ -1,169 +1,156 @@
 #include "Crow.hpp"
-#include <string.h>
-#include <iostream>
 
-void Crow::Init(Vector2 startPos, int spriteScale) {
+void Crow::Init(Vector2 startPos, int scale) {
     position = startPos;
-    form = CrowForm::Undead;
-    state = CrowState::Idle;
-    attack = AttackType::Side;
+    size = scale;
 
-    // Animations
-    undeadIdle.Init("assets/Charles-Idle(Undead)-Sheet.png", 6, 8.0f, position, spriteScale);
-    undeadRun.Init("assets/Charles-Run(Undead)-Sheet.png", 3, 12.0f, position, spriteScale);
-    undeadJump.Init("assets/Charles-Jump(Undead)-Sheet.png", 4, 16.0f, position, spriteScale, false);
-    aliveIdle.Init("assets/Charles-Idle-Sheet.png", 2, 8.0f, position, spriteScale);
-    aliveRun.Init("assets/Charles-Run-Sheet.png", 3, 12.0f, position, spriteScale);
-    aliveJump.Init("assets/Charles-Jump-Sheet.png", 4, 16.0f, position, spriteScale, false);
-    sideAttack.Init("assets/Charles-SideAttack-Sheet.png", 5, 20.0f, position, spriteScale, false);
-    upAttack.Init("assets/Charles-UpAttack-Sheet.png", 5, 16.0f, position, spriteScale, false);
-    downAttack.Init("assets/Charles-DownAttack-Sheet.png", 5, 16.0f, position, spriteScale, false);
+    // Load textures
+    idleUNDEAD  = LoadTexture("assets/Charles-Idle(Undead)-Sheet.png");
+    runUNDEAD   = LoadTexture("assets/Charles-Run(Undead)-Sheet.png");
+    jumpUNDEAD  = LoadTexture("assets/Charles-Jump(Undead)-Sheet.png");
+    idleALIVE   = LoadTexture("assets/Charles-Idle-Sheet.png");
+    runALIVE    = LoadTexture("assets/Charles-Run-Sheet.png");
+    jumpALIVE   = LoadTexture("assets/Charles-Jump-Sheet.png");
+    attackSIDE  = LoadTexture("assets/Charles-SideAttack-Sheet.png");
+    attackUP    = LoadTexture("assets/Charles-UpAttack-Sheet.png");
+    attackDOWN  = LoadTexture("assets/Charles-DownAttack-Sheet.png");
 
-}
+    // Load Undead animations
+    undeadIDLE.Init(idleUNDEAD, 6, 8.0f, size); undeadAnims[CharacterState::IDLE] = undeadIDLE;
+    undeadRUN.Init(runUNDEAD, 3, 12.0f, size); undeadAnims[CharacterState::RUN] = undeadRUN;
+    undeadJUMP.Init(jumpUNDEAD, 4, 16.0f, size, false); undeadAnims[CharacterState::JUMP] = undeadJUMP;
 
-void Crow::Update(Input input) {
-    float dt = GetFrameTime();
+    // Load alive animations
+    aliveIDLE.Init(idleALIVE, 2, 8.0f, size); aliveAnims[CharacterState::IDLE] = aliveIDLE;
+    aliveRUN.Init(runALIVE, 3, 12.0f, size); aliveAnims[CharacterState::RUN] = aliveRUN;
+    aliveJUMP.Init(jumpALIVE, 4, 16.0f, size, false); aliveAnims[CharacterState::JUMP] = aliveJUMP;
+    // Load attack animations
+    sideATTACK.Init(attackSIDE, 5, 20.0f, size, false); aliveAnims[CharacterState::ATTACK_SIDE] = sideATTACK;
+    upATTACK.Init(attackUP, 5, 20.0f, size, false); aliveAnims[CharacterState::ATTACK_UP] = upATTACK;
+    downATTACK.Init(attackDOWN, 5, 20.0f, size, false); aliveAnims[CharacterState::ATTACK_DOWN] = downATTACK;
 
-    if (input.stabbed) {
-        Stab();
-    }
-
-    position.x += input.moveX * moveSpeed * dt;
-    position.y += input.moveY * moveSpeed * dt;
-
-    DetermineState(input);
-
-    // We're in the air
-    if (!onGround) {
-        zVelocity -= gravity * dt;
-        z += zVelocity * dt;
-
-        if (z <= 0.0f) {
-            z = 0.0f;
-            zVelocity = 0.0f;
-            onGround = true;
-        }
-    }
-
-    Vector2 drawPos = position;
-    drawPos.y -= z;
-
-    Animation& anim = GetAnimation();
-    anim.SetPosition(drawPos);
-    anim.Update();
-
-    if (isAttacking && anim.IsFinished()) {
-        isAttacking = false;
-        GetAnimation().SetPosition(drawPos);
-    }
-}
-
-void Crow::Draw() {
-
-    // Vector2 center = { dest.width / 2, dest.height / 2};
-    // Vector2 shadow = { position.x - 15, position.y + 33 };
-    // if (flipX) {
-    //     source.width = -source.width;
-    //     Vector2 flipshadow = { position.x + 15, position.y + 33 };
-    // }
-    // DrawEllipse(shadow.x, shadow.y, 20, 4, Fade(BLACK, 0.25f));
-
-    GetAnimation().Draw(faceRight);
-}
-
-void Crow::SetPosition(Vector2 pos) {
-    position = pos;
-    // Sync up animation positions
-    // GetAnimation().SetPosition(pos);
-}
-
-Animation& Crow::GetAnimation() {
-    if (isAttacking) return GetAttackAnimation();
-
-    if (form == CrowForm::Undead) {
-        switch (state) {
-        case CrowState::Idle:   return undeadIdle;
-        case CrowState::Run:    return undeadRun;
-        case CrowState::Jump:   return undeadJump;
-        default:                return undeadIdle;
-        }
-    } 
-    else if (form == CrowForm::Alive) {
-        switch (state) {
-        case CrowState::Idle:   return aliveIdle;
-        case CrowState::Run:    return aliveRun;
-        case CrowState::Jump:   return aliveJump;
-        }
-    }
-    return undeadIdle;
-}
-
-Animation& Crow::GetAttackAnimation() {
-    if (form == CrowForm::Alive) {
-        switch (attack) {
-        case AttackType::Side:  return sideAttack;
-        case AttackType::Up:    return upAttack;
-        case AttackType::Down:  return downAttack;
-        }
-    }
-    return undeadIdle;
-}
-
-void Crow::StartAttack(Input input) {
-    if (isAttacking || form == CrowForm::Undead) return;
-
-    // Determine direction
-    if (input.moveY < 0) attack = AttackType::Up;
-    else if (input.moveY > 0) attack = AttackType::Down;
-    else attack = AttackType::Side;
-
-    isAttacking = true;
-
-    Animation& animAttack = GetAnimation();
-    animAttack.Reset();
+    // Default
+    animations = undeadAnims;
 }
 
 void Crow::Unload() {
-    undeadIdle.Unload();
-    undeadRun.Unload();
-    aliveIdle.Unload();
-    aliveRun.Unload();
-    sideAttack.Unload();
+    UnloadTexture(idleUNDEAD);
+    UnloadTexture(runUNDEAD);
+    UnloadTexture(jumpUNDEAD);
+    UnloadTexture(idleALIVE);
+    UnloadTexture(runALIVE);
+    UnloadTexture(jumpALIVE);
+    UnloadTexture(attackSIDE);
+    UnloadTexture(attackUP);
+    UnloadTexture(attackDOWN);
 }
 
-void Crow::Stab() {
-    if (form == CrowForm::Undead) form = CrowForm::Alive;
-    else                          form = CrowForm::Undead;
-}
+void Crow::Update(Input input) {
+    CharacterState newState = currentState;
 
-void Crow::DetermineState(Input input) {
-    if (input.attacked) StartAttack(input);
-    if (!isAttacking) {
-        if (input.jumped && onGround) {
-            onGround = false;
-            zVelocity = jumpPower;
-            SetState(CrowState::Jump);
-            GetAnimation().Reset();
+    // Determine newState from input
+    if (input.attacked && currentForm == CrowForm::ALIVE) {
+        // Check attack direction based on Input
+        if (input.moveY < 0) {
+            newState = CharacterState::ATTACK_UP;
+        } 
+        else if (input.moveY > 0) {
+            newState = CharacterState::ATTACK_DOWN;
+        } 
+        else {
+            newState = CharacterState::ATTACK_SIDE;
         }
+    }
+    // Jump input
+    else if (input.jumped && onGround) {
+        newState = CharacterState::JUMP;
+        zVelocity = jumpPower;
+        onGround = false;
+    }
+    // Aerial physics
+    else if (!onGround) {
+        newState = CharacterState::JUMP;
+    }
+    // Ground movement
+    else if (input.moveX != 0 || input.moveY != 0) {
+            newState = CharacterState::RUN;
+    }
+    // Default
+    else {
+        newState = CharacterState::IDLE;
+    }
 
-        if (!onGround) {
-            SetState(CrowState::Jump);
-        } else {
-            if ((input.moveX || input.moveY) != 0) {
-                SetState(CrowState::Run);
-                if (input.moveX > 0) faceRight = true;
-                else if (input.moveX < 0) faceRight = false;
-            // } else if (input.attacked) {
-            //     SetState(CrowState::Attack);
-            //     GetAnimation().Reset();
-            } else {
-                SetState(CrowState::Idle);
+    // Try to switch states
+    if (newState != currentState) {
+        if (CanInterrupt(newState)) {
+            currentState = newState;
+            // Safety check before resetting
+            if(animations.count(currentState) > 0) {
+                animations[currentState].Reset();       // Reset animation before playing
             }
         }
     }
+
+    // Form switching (stabbing)
+    if (input.special) {
+        SwitchForm();
+    }
+
+    // Update physics
+    velocity.x = 0;
+    velocity.y = 0;
+    if (currentState == CharacterState::RUN || currentState == CharacterState::JUMP || IsAttacking()) {
+        velocity.x += input.moveX * speed;
+        velocity.y += input.moveY * speed;
+        if (input.moveX > 0) faceRight = true;
+        if (input.moveX < 0) faceRight = false;
+    } else {
+        velocity.x = 0;
+        velocity.y = 0;
+    }
+
+    Character::Update(GetFrameTime());  // (pass in dt)
 }
 
-void Crow::SetState(CrowState newState) {
-    if (state == newState) return;
-    state = newState;
+bool Crow::CanInterrupt(CharacterState nextState) {
+    // If Idle or Running, we can do anything
+    if (currentState == CharacterState::IDLE || currentState == CharacterState::RUN) return true;
+
+    // If jumping, we can only attack or nothing
+    if (currentState == CharacterState::JUMP) {
+        // Allow switching to an Attack (Air Attack)
+        if (nextState == CharacterState::ATTACK_SIDE || 
+            nextState == CharacterState::ATTACK_UP || 
+            nextState == CharacterState::ATTACK_DOWN) {
+            return true;
+        }
+        // Switch to Idle/Run if on ground
+        if (onGround) return true;
+        return false; 
+    }
+
+    // Attack cancel rules
+    if (IsAttacking()) {
+        // Can cancel after active frames
+        if (animations[currentState].currentFrame > 2 /* NOTE: "2" is the active frames */) return true;
+        // Wait for animation to finish otherwise
+        if (animations[currentState].IsFinished()) return true;
+        return false;   // Locked in animation
+    }
+    return true;
+}
+
+void Crow::SwitchForm()
+{
+    if (currentForm == CrowForm::UNDEAD) {
+        currentForm = CrowForm::ALIVE;
+        animations = aliveAnims;        // Swap moveset
+    } else { 
+        currentForm = CrowForm::UNDEAD;
+        animations = undeadAnims;
+    }
+
+    if (animations.find(currentState) == animations.end()) {
+        currentState = CharacterState::IDLE;
+    }
 }

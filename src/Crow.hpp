@@ -1,78 +1,40 @@
 #pragma once
 #include <raylib.h>
-#include "Animation.hpp"
+#include "Character.hpp"
 #include "Input.hpp"
 
-enum class CrowForm {
-    Undead,
-    Alive
-};
+enum class CrowForm { UNDEAD, ALIVE };
 
-enum class CrowState {
-    Idle,
-    Run,
-    Jump,
-    Attack
-};
-
-enum class AttackType {
-    Side,
-    Up,
-    Down
-};
-
-class Crow {
-    public:
-        // Actual main.cpp setup
-        void Init(Vector2 startPos, int spriteScale);
-        void Update(Input input);
-        void Draw();
-        void Unload();
-
-        // Helpers
-        void SetPosition(Vector2 pos);
-        Vector2 GetPosition() const { return position; }
-        Animation& GetAnimation();
-        Animation& GetAttackAnimation();
-        void StartAttack(Input input);
+class Crow : public Character {
     private:
-        Vector2 position{};
+        CrowForm currentForm = CrowForm::UNDEAD;
 
-        float gravity = 2000.0f;
-        float moveSpeed = 350.0f;
-        float z = 0.0f;                // Z-axis floor
+        // Crow Stats
         float jumpPower = 800.0f;
-        float zVelocity = 0.0f;        // Vertical (jump) velocity
-        bool onGround = true;
-        bool faceRight = false;
-        
-        bool isAttacking = false;
-        AttackType attack { AttackType::Side };
-        struct AttackTimeline {
-            AttackType type;
-            int activeStartFrame;
-            int activeEndFrame;
+        float speed = 350.0f;
+        int size = 4;
 
-            bool hitboxOn = false;
-            bool finished = false;
-            bool dashCanceled = false;
-        };
+        // Textures
+        Texture2D idleUNDEAD; Texture2D runUNDEAD; Texture2D jumpUNDEAD;
+        Texture2D idleALIVE; Texture2D runALIVE; Texture2D jumpALIVE;
+        Texture2D attackSIDE; Texture2D attackUP; Texture2D attackDOWN; 
 
-        // int scale{ 1 };
-        CrowForm form { CrowForm::Undead };
-        void Stab();    // Switch from Undead/Alive
+        // Animations
+        Animation undeadIDLE; Animation undeadRUN; Animation undeadJUMP;
+        Animation aliveIDLE; Animation aliveRUN; Animation aliveJUMP;
+        Animation sideATTACK; Animation upATTACK; Animation downATTACK;
 
-        CrowState state { CrowState::Idle };
-        void DetermineState(Input input);
-        void SetState(CrowState newState);
+        // Maps<state, anim> for forms
+        std::map<CharacterState, Animation> undeadAnims;
+        std::map<CharacterState, Animation> aliveAnims;
 
-        Animation aliveIdle;
-        Animation aliveRun;
-        Animation aliveJump;
-        Animation sideAttack;
-        Animation upAttack;
-        Animation downAttack;
-        Animation undeadIdle;
-        Animation undeadRun;
-        Animation undeadJump;
+        // Combat logic
+        bool CanInterrupt(CharacterState nextState);
+        void SwitchForm();  // Stab();
+
+    public:
+        void Init(Vector2 startPos, int scale);
+        void Unload();
+        void Update(Input input);
+        // Draw inherited from Character
 };

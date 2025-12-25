@@ -22,7 +22,7 @@ int main() {
         input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
         input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
 
-        input.stabbed = IsKeyPressed(KEY_E);
+        input.special = IsKeyPressed(KEY_E);
         input.jumped = IsKeyPressed(KEY_SPACE);
         input.attacked = IsKeyPressed(KEY_J);
 
