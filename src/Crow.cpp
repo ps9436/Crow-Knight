@@ -29,6 +29,7 @@ void Crow::Init(Vector2 startPos, int scale) {
     upATTACK.Init(attackUP, 5, 20.0f, size, false); aliveAnims[CharacterState::ATTACK_UP] = upATTACK;
     downATTACK.Init(attackDOWN, 5, 20.0f, size, false); aliveAnims[CharacterState::ATTACK_DOWN] = downATTACK;
 
+    shadow = LoadTexture("assets/Charles-Shadow.png");
     // Default
     animations = undeadAnims;
 }
@@ -43,6 +44,7 @@ void Crow::Unload() {
     UnloadTexture(attackSIDE);
     UnloadTexture(attackUP);
     UnloadTexture(attackDOWN);
+    UnloadTexture(shadow);
 }
 
 void Crow::Update(Input input) {
@@ -93,7 +95,7 @@ void Crow::Update(Input input) {
 
     // Form switching (stabbing)
     if (input.special) {
-        SwitchForm();
+        Special();
     }
 
     // Update physics
@@ -140,7 +142,7 @@ bool Crow::CanInterrupt(CharacterState nextState) {
     return true;
 }
 
-void Crow::SwitchForm()
+void Crow::Special()
 {
     if (currentForm == CrowForm::UNDEAD) {
         currentForm = CrowForm::ALIVE;

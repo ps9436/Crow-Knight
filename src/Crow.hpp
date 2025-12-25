@@ -30,7 +30,7 @@ class Crow : public Character {
 
         // Combat logic
         bool CanInterrupt(CharacterState nextState);
-        void SwitchForm();  // Stab();
+        void Special() override;    // Stab();
 
     public:
         void Init(Vector2 startPos, int scale);

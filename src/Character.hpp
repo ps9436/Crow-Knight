@@ -24,9 +24,12 @@ class Character {
         float gravity = 2000.0f;
         bool faceRight = false;     // Should character face right (y/n)?
         bool onGround = true;
+        Texture2D shadow;
 
         std::map<CharacterState, Animation> animations;
         CharacterState currentState = CharacterState::IDLE;
+
+        void DrawShadow();
 
     public:
         virtual void Update(float dt);
@@ -44,6 +47,8 @@ class Character {
         bool IsLocked() const {
             return currentState == CharacterState::DEATH;
         }
+
+        virtual void Special() {}
 
         // Virtual so specific characters can override it for special logic
         virtual void OnStateSwitch(CharacterState oldState, CharacterState newState) {}
