@@ -35,7 +35,7 @@ struct Animation {
         }
     }
 
-    void Draw(Vector2 position, bool flipH) {
+    void Draw(Vector2 position, bool flipH = false) {
         float width = (float)texture.width / totalFrames;
         float height = (float)texture.height;
 
@@ -52,10 +52,12 @@ struct Animation {
     }
 
     // For character state switching
+    // Character plays the beginning of their anim (not in the middle)
     void Reset() {
         currentFrame = 0;
         timer = 0.0f;
     }
+    
     // Check if animation (attack) ended
     bool IsFinished() const {
         return (!loop) && (currentFrame >= totalFrames - 1);

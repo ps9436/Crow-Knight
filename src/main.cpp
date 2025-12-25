@@ -3,9 +3,8 @@
 #include "Input.hpp"
 
 int main() {
-    const int SCREEN_WIDTH = 1920;
-    const int SCREEN_HEIGHT = 1080;
-    const int SPRITE_SCALE = 4;
+    const int SCREEN_WIDTH = 800;
+    const int SCREEN_HEIGHT = 800;
 
     // Initialize the window
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Crow Knight");
@@ -14,7 +13,7 @@ int main() {
     Input input{};
 
     Crow crow;
-    crow.Init(Vector2{SCREEN_WIDTH/2, SCREEN_HEIGHT/2}, SPRITE_SCALE);
+    crow.Init(Vector2{SCREEN_WIDTH/2, SCREEN_HEIGHT/2});
     
     // Main game loop
     while (!WindowShouldClose()) {
@@ -22,9 +21,10 @@ int main() {
         input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
         input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
 
-        input.special = IsKeyPressed(KEY_E);
         input.jumped = IsKeyPressed(KEY_SPACE);
         input.attacked = IsKeyPressed(KEY_J);
+        input.special = IsKeyPressed(KEY_E);
+        input.dashed = IsKeyPressed(KEY_I);
 
         crow.Update(input);
         

@@ -4,7 +4,8 @@
 struct Input {
     float moveX;
     float moveY;
-    bool special;
     bool jumped;
     bool attacked;
+    bool special;
+    bool dashed;
 };

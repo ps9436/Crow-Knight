@@ -11,6 +11,7 @@ enum class CharacterState {
     ATTACK_SIDE,
     ATTACK_UP,
     ATTACK_DOWN,
+    DASH,
     HURT,
     DEATH
 };
@@ -24,6 +25,7 @@ class Character {
         float gravity = 2000.0f;
         bool faceRight = false;     // Should character face right (y/n)?
         bool onGround = true;
+        Vector2 dashEffectPos;
         Texture2D shadow;
 
         std::map<CharacterState, Animation> animations;
