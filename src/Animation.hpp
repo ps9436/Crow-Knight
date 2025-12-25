@@ -1,26 +1,60 @@
 #pragma once
 #include <raylib.h>
-#include <string>
 
-class Animation {
-    private:
-        Texture2D texture;      // The actual sprite
-        int totalFrames;        // Total number of frames within the sprite
-        int currentFrame;       // The current frame on the sprite
-        float frameTime;        // Amount of time for each frame
-        float frameSpeed;       // FPS
-        bool loop;              // Should the animation loop or not
-        Vector2 position;       // Postion of the sprite
-        Rectangle frameRec;     // Rectangle going over each individual frame
-        int scale{1};
+struct Animation {
+    Texture2D texture;          // The actual sprite
+    int totalFrames;            // Total number of frames within the sprite
+    int currentFrame = 0;       // The current frame on the sprite
+    float frameSpeed;           // FPS
+    float timer = 0.0f;         // Count up difference in time (dt) until next frame
+    int scale = 1;              // Scale of texture
+    bool loop = true;           // Should the animation loop or not
 
-    public:
-        // Method decelerations
-        void Init(const std::string& filename, int frames, float speed, Vector2 pos, int spriteScale = 1, bool repeated = true);     // Initialize the sprite (contruc)
-        void Update();              // Update the frame of the sprite
-        void Draw(bool flipX);      // Draw the texture flipped or not (DrawTexturePro)
-        void SetPosition(Vector2 pos);
-        void Reset();
-        bool IsFinished() const;
-        void Unload();
+    // Initialize the sprite (contructor)
+    void Init(Texture2D tex, int frames, float speed, int spriteScale = 1, bool shouldLoop = true) {
+        texture = tex;
+        totalFrames = frames;
+        frameSpeed = speed;
+        scale = spriteScale;
+        loop = shouldLoop;
+    }
+   
+    void Animation::Update(float dt) {
+        timer += dt;        // dt is the time (s) that passed since the last frame
+        if (timer >= frameSpeed) {
+            timer = 0.0f;
+            if (loop) {
+                currentFrame = (currentFrame + 1) % totalFrames;
+            } else {
+                if (currentFrame < totalFrames - 1) currentFrame++;
+                // else: stay on the last frame
+            }
+        }
+    }
+
+    void Animation::Draw(Vector2 position, bool flipH) {
+        float width = (float)texture.width / totalFrames;
+        float height = (float)texture.height;
+
+        Rectangle source = {
+            currentFrame * width,
+            0,
+            flipH ? -width : width,     // Flip texture horizontally if needed
+            height
+        };
+        Rectangle dest = { position.x, position.y, width * scale, height * scale};
+
+        // Change {0,0} to {dest.width/2,dest.height/2} for center sprite drawing
+        DrawTexturePro(texture, source, dest, {0,0}, 0.0f, WHITE);      
+    }
+
+    // For character state switching
+    void Reset() {
+        currentFrame = 0;
+        timer = 0.0f;
+    }
+    // Check if animation (attack) ended
+    bool IsFinished() const {
+        return (!loop) && (currentFrame >= totalFrames - 1);
+    }
 };
