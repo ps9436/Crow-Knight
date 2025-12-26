@@ -45,13 +45,26 @@ class Character {
                    currentState == CharacterState::ATTACK_UP || 
                    currentState == CharacterState::ATTACK_DOWN;
         }
-        // Helper to check if we are state where we can't move
-        bool IsLocked() const {
-            return currentState == CharacterState::DEATH;
-        }
 
-        virtual void Special() {}
+        virtual void Special() {};  // {} so we don't have to implement
 
         // Virtual so specific characters can override it for special logic
         virtual void OnStateSwitch(CharacterState oldState, CharacterState newState) {}
+
+        
+        // Helpers
+        // Check if we are state where we can't move
+        bool IsLocked() const {
+            return currentState == CharacterState::DEATH;
+        }
+        
+        // Get character center
+        Vector2 GetPosition() {
+            return { position.x, position.y}; 
+        }
+
+        // Get character facing (R = true/L = flase)
+        bool GetFaceRight() {
+            return { faceRight };
+        }
 };

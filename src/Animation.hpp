@@ -48,7 +48,7 @@ struct Animation {
         Rectangle dest = { position.x, position.y, width * scale, height * scale};
 
         // Change {0,0} to {dest.width/2,dest.height/2} for center sprite drawing
-        DrawTexturePro(texture, source, dest, {0,0}, 0.0f, WHITE);      
+        DrawTexturePro(texture, source, dest, {dest.width/2,dest.height/2}, 0.0f, WHITE);      
     }
 
     // For character state switching
@@ -57,7 +57,7 @@ struct Animation {
         currentFrame = 0;
         timer = 0.0f;
     }
-    
+
     // Check if animation (attack) ended
     bool IsFinished() const {
         return (!loop) && (currentFrame >= totalFrames - 1);

@@ -31,13 +31,11 @@ void Character::DrawShadow() {
 
     // Dimensions of current sprite
     Animation& anim = animations[currentState];
-    float spriteWidth = ((float)anim.texture.width / anim.totalFrames) * anim.scale;
-    float spriteHeight = (float)anim.texture.height * anim.scale;
 
     // Adjust shadow postion
     Vector2 shadowPos = {
-        position.x + (spriteWidth / 2),
-        position.y + (spriteHeight / 2)
+        position.x,
+        position.y
     };
 
     // How much shadow shrinks as we jump
