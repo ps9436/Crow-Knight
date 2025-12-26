@@ -49,6 +49,10 @@ class CameraManager {
         }
 
         // Helpers to switch camera modes
+        void SwitchCamera(Vector2 pos) {
+            if (currentMode == CameraState::LOCKED) FollowPlayer();
+            else LockTo(pos);
+        }
         void LockTo(Vector2 position) {
             currentMode = CameraState::LOCKED;
             lockedTarget = position;

@@ -8,4 +8,5 @@ struct Input {
     bool attacked;
     bool special;
     bool dashed;
+    bool cameraLocked;
 };
