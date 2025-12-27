@@ -43,13 +43,12 @@ class Owl : public Mob {
             // Stats
             speed = 300.0f;
             health = 2;
+            size = scale;
         }
 
         Rectangle GetHitbox() override {
-            if (faceRight) {
-                return { position.x - 20, position.y - 52, 72, 84 };
-            } else {
-                return { position.x - 52, position.y - 52, 72, 84 };
-            }
+            float offX = faceRight ? 5.0f : 13.0f;
+            float offY = 13.0f;
+            return { position.x - (offX * size), position.y - (offY * size), 18 * size, 21 * size };
         }
 };

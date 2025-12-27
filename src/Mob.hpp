@@ -11,6 +11,9 @@ class Mob : public Character {
 
         float deadTimer = 0.0f;
 
+        // Radius for collision/spacing
+        float radius = 20.0f;
+
         // Spawn logic
         // Spawn enemy at a random spot outside camera view
         void Spawn(Vector2 playerPos, int screenW, int screenH) {
@@ -37,10 +40,13 @@ class Mob : public Character {
                     break;
             }
         }
-        void Update(Vector2 playerPos, bool playerAttacking, Rectangle playerHitbox) {
+        
+        void Update(Vector2 playerPos, bool playerAttacking, Rectangle playerHitbox, Vector2 pushForce) {
+            float dt = GetFrameTime();
+
             // Update the animation
             if (animations.count(currentState) > 0) {
-                animations[currentState].Update(GetFrameTime());
+                animations[currentState].Update(dt);
             }
 
             // Death logic
@@ -60,14 +66,15 @@ class Mob : public Character {
                 }
                 return;     // Don't move while hurt
             }
-            // Run towards Player
+            // Movement logic (run towards player)
             if (currentState == CharacterState::RUN) {
                 Vector2 direction = Vector2Subtract(playerPos, position);
+                direction = Vector2Add(direction, pushForce);   // 
 
                 // Normalize for direction
                 if (Vector2Length(direction) > 1.0f) {
                     direction = Vector2Normalize(direction);
-                    float pps = speed * GetFrameTime();     // pixel per second
+                    float pps = speed * dt;     // pixel per second
                     position = Vector2Add(position, Vector2Scale(direction, pps));
                 }
                 
@@ -101,5 +108,16 @@ class Mob : public Character {
 
         virtual void Draw() override {
             Character::Draw();
+        }
+
+        bool IsDeadAndGone() {
+            if (currentState != CharacterState::DEATH) return false;
+            
+            // Check if the death animation has finished playing
+            if (animations.count(CharacterState::DEATH)) {
+                Animation& anim = animations[CharacterState::DEATH];
+                return anim.currentFrame >= anim.totalFrames - 1;
+            }
+            return true; // If no animation exists, remove instantly
         }
 };

@@ -18,6 +18,7 @@ enum class CharacterState {
 
 class Character {
     protected:
+        int size;
         Vector2 position;
         Vector2 velocity;           // X/Y movement
         float z = 0.0f;             // Z-axis height
@@ -55,6 +56,10 @@ class Character {
         virtual Rectangle GetAttackBox() {}     // Where character hits
 
         // Helpers
+        CharacterState GetState() const { 
+            return currentState; 
+        }
+        
         // Check if we are state where we can't move
         bool IsLocked() const {
             return currentState == CharacterState::DEATH;

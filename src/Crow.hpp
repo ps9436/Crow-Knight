@@ -12,7 +12,6 @@ class Crow : public Character {
         // Crow Stats
         float jumpPower = 800.0f;
         float speed = 350.0f;
-        int size;   // Size is 4 unless specified otherwise in Init
 
         // Dash logic
         float dashDuration = 0.15f;
@@ -51,7 +50,10 @@ class Crow : public Character {
 
         // Where crow gets hit
         Rectangle GetHitbox() override {
-            return { position.x, position.y, 50, 80 };
+            float offX = faceRight ? 0.0f : 10.0f;
+            float offY = 9.0f;
+            float zOffset = (z > 0.0f) ? z : 0.0f;
+            return { position.x - (offX * size), position.y - (offY * size) - zOffset, 10 * size, 16 * size };
         }
 
         // Where crow hits
@@ -59,52 +61,37 @@ class Crow : public Character {
             // If not attacking, return nothing
             if (!IsAttacking()) return { 0, 0, 0, 0 };
 
-            // If we're facing right
-            if (faceRight) {
-                switch (currentState) {
+            // Width, Height, Offset center
+            float w, h, offY, offX;
+            
+            // Determine box shape based on State
+            switch (currentState) {
                 case CharacterState::ATTACK_UP:
-                if (z > 0.0f) {
-                    return { position.x - 14*size, position.y - 53*size - z, 34*size, 63*size };
-                } else {
-                    return { position.x - 14*size, position.y - 53*size, 34*size, 63*size };
-                }
+                    w = 34; h = 63; offY = 53;
+                    // If right, shift left by 14, else shift left by 19
+                    offX = faceRight ? -14 : -19; 
+                    break;
+
                 case CharacterState::ATTACK_DOWN:
-                if (z > 0.0f) {
-                    return { position.x - 7*size, position.y - 6*size - z, 33*size, 64*size };
-                } else {
-                    return { position.x - 7*size, position.y - 6*size, 33*size, 64*size };
-                }
+                    w = 33; h = 64; offY = 6;
+                    offX = faceRight ? -7 : -26;
+                    break;
+
                 case CharacterState::ATTACK_SIDE:
                 default:
-                    if (z > 0.0f) {
-                        return { position.x, position.y - 19*size - z, 60*size, 33*size };
-                    } else {
-                        return { position.x, position.y - 19*size, 60*size, 33*size };
-                    }
-                }
+                    w = 60; h = 33; offY = 19;
+                    offX = faceRight ? 0 : -60; 
+                    break;
             }
-            else {
-                switch (currentState) {
-                    case CharacterState::ATTACK_UP:
-                    if (z > 0.0f) {
-                        return { position.x - 19*size, position.y - 53*size - z, 34*size, 63*size };
-                    } else {
-                        return { position.x - 19*size, position.y - 53*size, 34*size, 63*size };
-                    }
-                    case CharacterState::ATTACK_DOWN:
-                    if (z > 0.0f) {
-                        return { position.x - 26*size, position.y - 6*size - z, 33*size, 64*size };
-                    } else {
-                        return { position.x - 26*size, position.y - 6*size, 33*size, 64*size };
-                    }
-                    case CharacterState::ATTACK_SIDE:
-                    default:
-                        if (z > 0.0f) {
-                            return { position.x - 60*size, position.y - 19*size - z, 60*size, 33*size };
-                        } else {
-                            return { position.x - 60*size, position.y - 19*size, 60*size, 33*size };
-                        }
-                }
-            }
+
+            // Apply scale (size of character) and Z-height
+            float zOffset = (z > 0.0f) ? z : 0.0f;
+
+            return {
+                position.x + (offX * size),
+                position.y - (offY * size) - zOffset,
+                w * size,
+                h * size
+            };
         }
 };
