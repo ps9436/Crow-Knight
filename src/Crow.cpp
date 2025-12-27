@@ -189,10 +189,10 @@ bool Crow::CanInterrupt(CharacterState nextState) {
 
     // Attack cancel rules
     if (IsAttacking()) {
-        // Attack cancel with dash
+        // Attack cancel with dashs
         if (nextState == CharacterState::DASH) return true;
         // Can cancel after active frames
-        if (animations[currentState].currentFrame > 2 /* NOTE: "2" is the active frames */) return true;
+        // if (animations[currentState].currentFrame > 2 /* NOTE: "2" is the active frames */) return true;
         // Wait for animation to finish otherwise
         if (animations[currentState].IsFinished()) return true;
         return false;   // Locked in animation

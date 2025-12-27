@@ -48,4 +48,63 @@ class Crow : public Character {
         void Unload();
         void Update(Input input);
         void Draw();
+
+        // Where crow gets hit
+        Rectangle GetHitbox() override {
+            return { position.x, position.y, 50, 80 };
+        }
+
+        // Where crow hits
+        Rectangle GetAttackBox() override {
+            // If not attacking, return nothing
+            if (!IsAttacking()) return { 0, 0, 0, 0 };
+
+            // If we're facing right
+            if (faceRight) {
+                switch (currentState) {
+                case CharacterState::ATTACK_UP:
+                if (z > 0.0f) {
+                    return { position.x - 14*size, position.y - 53*size - z, 34*size, 63*size };
+                } else {
+                    return { position.x - 14*size, position.y - 53*size, 34*size, 63*size };
+                }
+                case CharacterState::ATTACK_DOWN:
+                if (z > 0.0f) {
+                    return { position.x - 7*size, position.y - 6*size - z, 33*size, 64*size };
+                } else {
+                    return { position.x - 7*size, position.y - 6*size, 33*size, 64*size };
+                }
+                case CharacterState::ATTACK_SIDE:
+                default:
+                    if (z > 0.0f) {
+                        return { position.x, position.y - 19*size - z, 60*size, 33*size };
+                    } else {
+                        return { position.x, position.y - 19*size, 60*size, 33*size };
+                    }
+                }
+            }
+            else {
+                switch (currentState) {
+                    case CharacterState::ATTACK_UP:
+                    if (z > 0.0f) {
+                        return { position.x - 19*size, position.y - 53*size - z, 34*size, 63*size };
+                    } else {
+                        return { position.x - 19*size, position.y - 53*size, 34*size, 63*size };
+                    }
+                    case CharacterState::ATTACK_DOWN:
+                    if (z > 0.0f) {
+                        return { position.x - 26*size, position.y - 6*size - z, 33*size, 64*size };
+                    } else {
+                        return { position.x - 26*size, position.y - 6*size, 33*size, 64*size };
+                    }
+                    case CharacterState::ATTACK_SIDE:
+                    default:
+                        if (z > 0.0f) {
+                            return { position.x - 60*size, position.y - 19*size - z, 60*size, 33*size };
+                        } else {
+                            return { position.x - 60*size, position.y - 19*size, 60*size, 33*size };
+                        }
+                }
+            }
+        }
 };

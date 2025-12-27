@@ -11,7 +11,7 @@ enum class CharacterState {
     ATTACK_SIDE,
     ATTACK_UP,
     ATTACK_DOWN,
-    DASH,
+    DASH,       // Or other (for mobs)
     HURT,
     DEATH
 };
@@ -46,12 +46,14 @@ class Character {
                    currentState == CharacterState::ATTACK_DOWN;
         }
 
-        virtual void Special() {};  // {} so we don't have to implement
+        virtual void Special() {}   // {} so we don't have to implement
 
         // Virtual so specific characters can override it for special logic
         virtual void OnStateSwitch(CharacterState oldState, CharacterState newState) {}
 
-        
+        virtual Rectangle GetHitbox() {}        // Hurtbox (where the character gets hurt)
+        virtual Rectangle GetAttackBox() {}     // Where character hits
+
         // Helpers
         // Check if we are state where we can't move
         bool IsLocked() const {
