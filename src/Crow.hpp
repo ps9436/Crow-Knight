@@ -40,12 +40,12 @@ class Crow : public Character {
         void Special() override;    // Stab();
         // Helper for the ease in/out math
         float EaseInOutQuad(float t);
-        void Dash(Input input);
+        void Dash(Input input, float dt);
 
     public:
         void Init(Vector2 startPos, int scale = 4);
         void Unload();
-        void Update(Input input);
+        void Update(Input input, float dt);
         void Draw();
 
         // Where crow gets hit
@@ -60,6 +60,8 @@ class Crow : public Character {
         Rectangle GetAttackBox() override {
             // If not attacking, return nothing
             if (!IsAttacking()) return { 0, 0, 0, 0 };
+            // Active frames are frame 1
+            if (GetCurrentFrame() < 1) return { 0, 0, 0, 0};
 
             // Width, Height, Offset center
             float w, h, offY, offX;

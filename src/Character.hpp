@@ -24,7 +24,7 @@ class Character {
         float z = 0.0f;             // Z-axis height
         float zVelocity = 0.0f;     // Vertical (jump) velocity
         float gravity = 2000.0f;
-        bool faceRight = false;     // Should character face right (y/n)?
+        bool faceRight = true;     // Should character face right (y/n)?
         bool onGround = true;
         Vector2 dashEffectPos;
         Texture2D shadow;
@@ -59,7 +59,13 @@ class Character {
         CharacterState GetState() const { 
             return currentState; 
         }
-        
+
+        int GetCurrentFrame() {
+            if (animations.count(currentState) > 0) {
+                return animations[currentState].currentFrame;
+            } else return 0;
+        }
+
         // Check if we are state where we can't move
         bool IsLocked() const {
             return currentState == CharacterState::DEATH;

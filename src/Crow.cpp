@@ -50,7 +50,7 @@ void Crow::Unload() {
     UnloadTexture(shadow);
 }
 
-void Crow::Update(Input input) {
+void Crow::Update(Input input, float dt) {
     dashAnim.Update(GetFrameTime());    // Update dash animation independent of dash
     if (currentState == CharacterState::DASH) {
 
@@ -70,7 +70,7 @@ void Crow::Update(Input input) {
             return;     // Skip Dash math
         }
 
-        Dash(input);
+        Dash(input, dt);
         return; // If dashed, skip standard physics
     }
 
@@ -159,7 +159,7 @@ void Crow::Update(Input input) {
         velocity.y = 0;
     }
 
-    Character::Update(GetFrameTime());  // (pass in dt)
+    Character::Update(dt);  // (pass in dt)
 }
 
 void Crow::Draw() {
@@ -192,7 +192,7 @@ bool Crow::CanInterrupt(CharacterState nextState) {
         // Attack cancel with dashs
         if (nextState == CharacterState::DASH) return true;
         // Can cancel after active frames
-        // if (animations[currentState].currentFrame > 2 /* NOTE: "2" is the active frames */) return true;
+        if (animations[currentState].currentFrame > 2 /* NOTE: "2" is the active frames */) return true;
         // Wait for animation to finish otherwise
         if (animations[currentState].IsFinished()) return true;
         return false;   // Locked in animation
@@ -223,8 +223,8 @@ float Crow::EaseInOutQuad(float t) {
     }
 }
 
-void Crow::Dash(Input input) {
-    float dt = GetFrameTime();
+void Crow::Dash(Input input, float dt) {
+    // float dt = GetFrameTime();
     dashTimer += dt;
 
     // Normalize time

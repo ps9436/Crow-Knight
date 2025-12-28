@@ -6,6 +6,7 @@
 #include "CameraManager.hpp"
 #include "Mob.hpp"
 #include "Owl.hpp"
+#include "Particles.hpp"
 
 // Static variabels
 Texture2D Owl::runOWL;
@@ -36,8 +37,10 @@ void DrawDebugGrid(int extent, int spacing) {
 }
 
 int main() {
-    const int SCREEN_WIDTH = 1280;
-    const int SCREEN_HEIGHT = 720;
+    const int SCREEN_WIDTH = 1600;
+    const int SCREEN_HEIGHT = 900;
+    float timeScale = 1.0f;
+    float hitStopTimer = 0.0f;
 
     // Initialize the window
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Crow Knight");
@@ -46,24 +49,40 @@ int main() {
     // Crow
     Crow crow;
     crow.Init(Vector2{SCREEN_WIDTH/2, SCREEN_HEIGHT/2});
+    Input input{};
 
     // Owl
-    Owl::runOWL = LoadTexture("assets/Oscar-Run-Sheet.png");
+    Owl::runOWL = LoadTexture("assets/goblin-run.png");
     Owl::revrunOWL = LoadTexture("assets/Oscar-Reverse-Run-Sheet.png");
-    Owl::hurtOWL = LoadTexture("assets/Oscar-Hurt-Sheet.png");
-    Owl::deadOWL = LoadTexture("assets/Charles-Feather-Sheet.png");
+    Owl::hurtOWL = LoadTexture("assets/goblin-hurt.png");
+    Owl::deadOWL = LoadTexture("assets/goblin-death2.png");
     Owl::shadowOWL = LoadTexture("assets/Charles-Shadow.png");
     std::vector<Owl> owls;
-    float spawnTimer = 0.0f;    // Linked to spawnRate
+    float spawnTimer;    // Linked to spawnRate
     
     // Initialize camera
     CameraManager camera;
     camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
 
-    Input input{};    
+    // Particles
+    Particles particles;
 
     // Main game loop
     while (!WindowShouldClose()) {
+        if (IsKeyPressed(KEY_MINUS)) timeScale -= 0.1f;
+        if (IsKeyPressed(KEY_EQUAL)) timeScale += 0.1f;
+        if (IsKeyPressed(KEY_ZERO))  timeScale = 0.0f; // Pause
+        if (IsKeyPressed(KEY_R))     timeScale = 1.0f; // Reset
+        float dt = GetFrameTime();
+        if (timeScale < 0.0f) timeScale = 0.0f;
+        // 1. Handle Hit Stop Timer
+        if (hitStopTimer > 0.0f) {
+            hitStopTimer -= GetFrameTime(); // Use real time to count down
+            dt = 0.0f;                      // FREEZE the game logic
+        } else {
+            // Normal time calculation
+            dt = GetFrameTime() * timeScale;
+        }
 
         input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
         input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
@@ -73,11 +92,12 @@ int main() {
         input.dashed = IsKeyPressed(KEY_I);
         if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
 
-        crow.Update(input);
+        crow.Update(input, dt);
+        if (input.dashed) particles.Spawn(crow.GetPosition(), 5, DARKGRAY); // Feathers
         camera.Update(crow.GetPosition(), crow.GetFaceRight());
 
         // Mob spawner
-        float spawnRate = 1.0f;     // Owl spawn rate
+        float spawnRate = 0.2f;     // Owl spawn rate
         spawnTimer += GetFrameTime();
         if (spawnTimer > spawnRate) {
             Owl owl;
@@ -87,14 +107,16 @@ int main() {
             owls.push_back(owl);
             spawnTimer = 0.0f;
         }
+
         // Mob loop
         // Remove dead owls
         owls.erase(std::remove_if(owls.begin(), owls.end(), [](Owl& o) { 
                 return o.IsDeadAndGone();
             }), owls.end());
+
         // Calculate repulsion
         std::vector<Vector2> pushForces(owls.size(), {0 ,0});
-
+        // Collisions
         for (int i = 0; i < owls.size(); i++) {
             // If dead, don't get pushed.
             if (owls[i].GetState() == CharacterState::DEATH) continue;
@@ -129,18 +151,26 @@ int main() {
             }
         }
 
-        Rectangle attackBox = {0,0,0,0};
-        if (input.attacked) attackBox = crow.GetAttackBox();
+        Rectangle attackBox = crow.GetAttackBox();
+        bool isHitboxActive = (attackBox.width > 0);
 
         // Update owls with forces
         int index = 0;
         for (auto& owl : owls) {    // Modify the original mob (auto&)
-            owl.Update(crow.GetPosition(), input.attacked, attackBox, pushForces[index]);
+            owl.Update(crow.GetPosition(), isHitboxActive, attackBox, pushForces[index], &hitStopTimer, dt);
             index++;
+            if (isHitboxActive && owl.immunityTimer <= 0.0f && CheckCollisionRecs(attackBox, owl.GetHitbox())) {
+             // Spawn blood
+             particles.Spawn(owl.GetPosition(), 15, MAROON); 
+             // If killed, bigger blood
+             if (owl.health <= 1) particles.Spawn(owl.GetPosition(), 30, RED);
+        }
             // if (CheckCollisionRecs(crow.GetHitbox(), owl.GetHitbox())) {
             // // PlayerTakeDamage();
             // }
         }
+
+        particles.Update(GetFrameTime());
 
         // List of pointer to all characters
         std::vector<Character*> renderQueue;
@@ -149,7 +179,6 @@ int main() {
         renderQueue.push_back(&crow);
         // Add all the enemies
         for (auto& owl : owls) renderQueue.push_back(&owl);
-
 
         // Sort owls by Y position so lower ones draw on top of higher ones
         std::sort(renderQueue.begin(), renderQueue.end(), [](Character* a, Character* b) {
@@ -163,10 +192,11 @@ int main() {
             for (Character* character : renderQueue) {
                 character->Draw();
             }
+            // particles.Draw(); // Draw particles after characters
             // // Debug: Draw attack box so you can see where you are hitting
-            // if (input.attacked) DrawRectangleLinesEx(attackBox, 3, RED);
+            if (attackBox.width > 0) DrawRectangleLinesEx(attackBox, 3, RED);
             // DrawRectangleLinesEx(crow.GetHitbox(), 3, RED);
-            // for (auto& owl: owls) DrawRectangleLinesEx(owl.GetHitbox(), 3, RED);
+            for (auto& owl: owls) DrawRectangleLinesEx(owl.GetHitbox(), 3, RED);
 
         EndMode2D();
         EndDrawing();

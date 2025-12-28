@@ -23,8 +23,13 @@ class Owl : public Mob {
 
 
         void init(int scale = 4) {
+            // Stats
+            size = scale;
+            speed = 250.0f;
+            health = 2;
+            weight = 1.0f;
 
-            owlRUN.Init(runOWL, 4, 16.0f, scale);
+            owlRUN.Init(runOWL, 4, 12.0f, scale);
             animations[CharacterState::RUN] = owlRUN;
 
             // owlRevRUN.Init(revrunOWL, 4, 16.0f, scale);
@@ -33,17 +38,12 @@ class Owl : public Mob {
             owlHURT.Init(hurtOWL, 4, 16.0f, scale);
             animations[CharacterState::HURT] = owlHURT;
 
-            owlDEATH.Init(deadOWL, 10, 10.0f, scale, false);
+            owlDEATH.Init(deadOWL, 8, 8.0f, scale, false);
             animations[CharacterState::DEATH] = owlDEATH;
 
             // Default
             animations[CharacterState::IDLE] = owlRUN;
             currentState = CharacterState::RUN;
-
-            // Stats
-            speed = 300.0f;
-            health = 2;
-            size = scale;
         }
 
         Rectangle GetHitbox() override {
