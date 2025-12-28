@@ -11,16 +11,29 @@ class Owl : public Mob {
         Animation owlDEATH;
 
     public:
-        static Texture2D runOWL;
-        static Texture2D revrunOWL;
-        static Texture2D hurtOWL;
-        static Texture2D deadOWL;
-        static Texture2D shadowOWL;
+        static inline Texture2D runOWL;
+        static inline Texture2D hurtOWL;
+        static inline Texture2D deadOWL;
+        static inline Texture2D shadowOWL;
 
         Owl () {
             this->shadow = shadowOWL;
         }
 
+        // Load owl textures
+        static void StaticLoad() {
+            Owl::runOWL = LoadTexture("assets/goblin-run.png");
+            Owl::hurtOWL = LoadTexture("assets/goblin-hurt.png");
+            Owl::deadOWL = LoadTexture("assets/goblin-death2.png");
+            Owl::shadowOWL = LoadTexture("assets/Charles-Shadow.png");
+        }
+
+        static void StaticUnload() {
+            UnloadTexture(runOWL);
+            UnloadTexture(hurtOWL);
+            UnloadTexture(deadOWL);
+            UnloadTexture(shadowOWL);
+        }
 
         void init(int scale = 4) {
             // Stats

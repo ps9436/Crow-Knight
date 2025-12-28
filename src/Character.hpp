@@ -52,8 +52,8 @@ class Character {
         // Virtual so specific characters can override it for special logic
         virtual void OnStateSwitch(CharacterState oldState, CharacterState newState) {}
 
-        virtual Rectangle GetHitbox() {}        // Hurtbox (where the character gets hurt)
-        virtual Rectangle GetAttackBox() {}     // Where character hits
+        virtual Rectangle GetHitbox() { return {0,0,0,0}; }     // Hurtbox (where the character gets hurt)
+        virtual Rectangle GetAttackBox() { return {0,0,0,0}; }  // Where character hits
 
         // Helpers
         CharacterState GetState() const { 
