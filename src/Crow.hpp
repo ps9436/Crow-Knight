@@ -12,10 +12,14 @@ class Crow : public Character {
         // Crow Stats
         float jumpPower = 800.0f;
         float speed = 350.0f;
+        float BLOOD = 100.0f;
+        float currentBlood = 100.0f;
+        float bloodDrainRate = 5.0f;
 
         // Dash logic
         float dashDuration = 0.15f;
         float dashTimer = 0.0f;
+        float dashCost = 5.0f;
         Vector2 dashStartPos;
         Vector2 dashTargetPos;
 
@@ -37,16 +41,33 @@ class Crow : public Character {
 
         // Combat logic
         bool CanInterrupt(CharacterState nextState);
-        void Special() override;    // Stab();
-        // Helper for the ease in/out math
-        float EaseInOutQuad(float t);
         void Dash(Input input, float dt);
+        float EaseInOutQuad(float t);   // Helper for the ease in/out math
+        void Special() override;        // Stab();
 
     public:
         void Init(Vector2 startPos, int scale = 4);
         void Unload();
         void Update(Input input, float dt);
         void Draw();
+        // Combat logic
+        void Heal(float amount);
+        void TakeDamage(float amount);
+        float GetBloodPercent();
+        bool IsAlive() const;
+
+        void Reset(Vector2 startPos) {////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!
+        position = startPos;
+        currentBlood = BLOOD;
+        currentState = CharacterState::IDLE;
+        currentForm = CrowForm::UNDEAD;
+        faceRight = true;
+        
+        // Reset Physics
+        velocity = { 0, 0 };
+        z = 0.0f;
+        zVelocity = 0.0f;
+    }
 
         // Where crow gets hit
         Rectangle GetHitbox() override {

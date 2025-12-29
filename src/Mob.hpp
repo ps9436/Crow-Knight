@@ -158,7 +158,7 @@ class Mob : public Character {
                 currentState = CharacterState::HURT;
                 damageCounter = 0;
                 if (animations.count(CharacterState::HURT)) {
-            animations[CharacterState::HURT].Reset();
+                    animations[CharacterState::HURT].Reset();
                 }
             }
         }

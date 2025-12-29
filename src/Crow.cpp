@@ -3,6 +3,7 @@
 void Crow::Init(Vector2 startPos, int scale) {
     position = startPos;
     size = scale;
+    currentBlood = BLOOD;
 
     // Load textures
     idleUNDEAD  = LoadTexture("assets/Charles-Idle(Undead)-Sheet.png");
@@ -51,9 +52,16 @@ void Crow::Unload() {
 }
 
 void Crow::Update(Input input, float dt) {
-    dashAnim.Update(GetFrameTime());    // Update dash animation independent of dash
-    if (currentState == CharacterState::DASH) {
+    dashAnim.Update(dt);    // Update dash animation independent of dash
 
+    if (currentForm == CrowForm::ALIVE && currentState != CharacterState::DEATH) {
+        currentBlood -= bloodDrainRate * dt;
+        if (currentBlood <= 0.0f) {
+            currentBlood = 0.0f;
+            currentState = CharacterState::DEATH;
+        }
+    }
+    if (currentState == CharacterState::DASH) {
         // Dash cancel with attack
         if (input.attacked && currentForm == CrowForm::ALIVE) {
             
@@ -79,6 +87,8 @@ void Crow::Update(Input input, float dt) {
     // Dash handler (dash only when alive - first priority)
     if (input.dashed && currentState != CharacterState::DASH && currentForm == CrowForm::ALIVE) {
         newState = CharacterState::DASH;
+
+        currentBlood -= dashCost;
 
         // Setup timers/positions
         dashTimer = 0.0f;
@@ -168,6 +178,27 @@ void Crow::Draw() {
     }
     Character::Draw();
 }
+
+void Crow::Heal(float amount) {
+    currentBlood += amount;
+    if (currentBlood > BLOOD) currentBlood = BLOOD;
+}
+
+void Crow::TakeDamage(float dps) {
+    if (currentState == CharacterState::DEATH) return;
+    if (dps > 50.0f) dps = 50.0f; // Max take 50 damage per second
+    currentBlood -= dps * GetFrameTime();
+    if (currentBlood < 0.0f) {
+        currentBlood = 0.0f;
+        currentState = CharacterState::DEATH;
+    }
+}
+
+float Crow::GetBloodPercent() {
+    return currentBlood / BLOOD;
+}
+
+bool Crow::IsAlive() const {return currentBlood > 0.0f; }
 
 bool Crow::CanInterrupt(CharacterState nextState) {
     // If Idle or Running, we can do anything

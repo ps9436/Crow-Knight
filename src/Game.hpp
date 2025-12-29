@@ -10,6 +10,7 @@
 #include "Owl.hpp"
 #include "Input.hpp"
 #include "CameraManager.hpp"
+#include "HUD.hpp"
 // #include "Particles.hpp"
 
 class Game {
@@ -22,6 +23,7 @@ class Game {
         CameraManager camera;
         // Particles particles;
         Input input;
+        HUD hud;
 
         // Entities
         std::vector<Character*> renderQueue;
@@ -83,9 +85,6 @@ class Game {
         void Init() {
             // Setup crow (player)
             crow.Init(Vector2{ (float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2 });
-            
-            // Setup camera
-            camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
 
             // Setup owls (enemies)
             Owl::StaticLoad();
@@ -93,12 +92,17 @@ class Game {
 
             // Reserve space for drawing
             renderQueue.reserve(2001);
+
+            // Setup systems
+            camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
+            hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
         }
 
         void Unload() {
             crow.Unload();
             Owl::StaticUnload();
             owls.clear();
+            hud.Unload();
         }
 
         void Update() {
@@ -135,7 +139,7 @@ class Game {
             camera.Update(crow.GetPosition(), crow.GetFaceRight());
 
             // Spawner
-            float spawnRate = 0.0f;
+            float spawnRate = 0.0f; // Spawn rate
             spawnTimer += GetFrameTime();
             if (spawnTimer > spawnRate) {
                 Owl owl;
@@ -213,7 +217,7 @@ class Game {
                                     Vector2 push = Vector2Scale(toNeighbor, 1.0f / dist);    // Create a vector pointing away from neighbor (same as normalizing)
 
                                     float strength = (overlapRadius - dist) / overlapRadius;    // Closer = stronger push
-                                    owls[i].pushForce = Vector2Add(owls[i].pushForce, Vector2Scale(push, strength * 500.0f));
+                                    owls[i].pushForce = Vector2Add(owls[i].pushForce, Vector2Scale(push, strength * 10000.0f));
                                 }
 
                             }
@@ -224,9 +228,19 @@ class Game {
             Rectangle attackBox = crow.GetAttackBox();  // Calculate hitbox once per frame
             bool isHitboxActive = (attackBox.width > 0);
             for (size_t i = 0; i < owls.size(); i++) {
+
+                int oldOwlHP = owls[i].health;  // For crow healing after update
+
                 // Pass in calculated force
                 owls[i].Update(crow.GetPosition(), isHitboxActive, attackBox, owls[i].pushForce, &hitStopTimer, dt);
 
+                // Damage and heal logic
+                if (owls[i].health < oldOwlHP && isHitboxActive && CheckCollisionRecs(attackBox, owls[i].GetHitbox())) crow.Heal(0.5f);    // 1 is heal factor for killing owls
+                if (owls[i].health > 0 && CheckCollisionRecs(crow.GetHitbox(), owls[i].GetHitbox())) crow.TakeDamage(20.0f);   // Owls hit 20 per second
+                if (crow.GetState() == CharacterState::DEATH) {
+                    ResetGame();
+                    return;
+                }
                 // Check Hit (Visual Effects)
                 // if (isHitboxActive && owls[i].immunityTimer <= 0.0f && CheckCollisionRecs(attackBox, owls[i].GetHitbox())) {
                 //     particles.Spawn(owls[i].GetPosition(), 15, MAROON); // Spawn blood
@@ -277,7 +291,31 @@ class Game {
             DrawFPS(10, 10);
             DrawText(TextFormat("Enemies: %i", owls.size()), 10, 40, 20, DARKGRAY);
 
+            // Draw HUD
+            hud.Draw(crow.GetBloodPercent());
+
             EndDrawing();
         }
+
+        void ResetGame() { ///////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!/////////
+        // 1. Reset Player
+        crow.Reset(Vector2{ (float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2 });
+
+        // 2. Clear Enemies
+        // This instantly deletes all 2000 enemies.
+        // Since std::vector manages its own memory, this is safe.
+        owls.clear();
+
+        // 3. Reset Game State
+        spawnTimer = 0.0f;
+        hitStopTimer = 0.0f;
+        // currentLevel = 1; // Optional: Reset level or keep it?
+        
+        // 4. Reset Camera
+        camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
+        
+        // 5. Clear Spatial Grid (Just in case)
+        spatialGrid.clear();
+    }
 
 };
