@@ -28,6 +28,18 @@ class Game {
         Crow crow;
         std::vector<Owl> owls;
 
+        // Spatial grid
+        const int CELL_SIZE = 200;
+        // Grid maps a cell ID to a list of character (mob) indices
+        std::unordered_map<int, std::vector<int>> spatialGrid;
+
+        // Generate unique ID for each grid square
+        int GetGridKey(Vector2 pos) {
+            int gx = static_cast<int>(pos.x) / CELL_SIZE;
+            int gy = static_cast<int>(pos.y) / CELL_SIZE;
+            return gx + (gy * 10000);
+        }
+
         // Debug grid
         void DrawDebugGrid(int extent, int spacing) {
             // extent = how far the grid goes in each direction
@@ -53,7 +65,7 @@ class Game {
         // Game state
         float hitStopTimer = 0.0f;  // Freeze on hits
         float timeScale = 1.0f;     // Game speed
-        float spawnTimer = 0.0f;     // Linked to spawn rate
+        float spawnTimer = 0.0f;    // Linked to spawn rate
         int currentLevel = 1;       // Level/wave
 
     public:
@@ -133,13 +145,25 @@ class Game {
                 spawnTimer = 0.0f;
             }
 
+            spatialGrid.clear();
+            // Populate the grid (put every owl in a bucket)
+            for (size_t i = 0; i < owls.size(); i++) {
+                if (owls[i].GetState() == CharacterState::DEATH) continue;
+
+                // Don't grid far away owls
+                if (Vector2DistanceSqr(crow.GetPosition(), owls[i].GetPosition()) < 1500.0f * 1500.0f) {
+                    int key = GetGridKey(owls[i].GetPosition());
+                    spatialGrid[key].push_back(i);  // unordered_map[int key] = owl => [int, mob]
+                }
+            }
+
             // Collision and physics
             // Reset push forces
             for (auto& owl : owls) owl.pushForce = {0, 0};
 
             for (size_t i = 0; i < owls.size(); i++) {
+                // Remove gone owls
                 if (owls[i].GetState() == CharacterState::DEATH) {
-                    // Remove gone owls
                     if (owls[i].IsDeadAndGone()) {
                         owls[i] = owls.back();
                         owls.pop_back();
@@ -158,26 +182,41 @@ class Game {
                     owls[i].pushForce = Vector2Subtract(owls[i].pushForce, Vector2Scale(moveDir, 2000.0f)); // Subtract instead of add
                 }
 
-                if (distToPlayerSqr > (1200.0f * 1200.0f)) continue;    // If off screen, don't calculate enemy collisions
+                // Grid collision
+                // Locate owl
+                int gx = static_cast<int>(owls[i].GetPosition().x) / CELL_SIZE;
+                int gy = static_cast<int>(owls[i].GetPosition().y) / CELL_SIZE;
 
-                // Check againts other owls (don't stack on top of eachother)
-                for (size_t j = 0; j < owls.size(); j++) {
-                    if (i == j) continue;    // Don't push againts self
-                    if (owls[j].GetState() == CharacterState::DEATH) continue;  // If neighbor dead, they don't push
+                // Check cell and 8 surrounding
+                for (int x = -1; x <= 1; x++) {
+                    for (int y = -1; y <= 1; y++) {
+                        int neighborKey = (gx + x) + ((gy + y) * 10000);
+                            // Look up cell in unordered_map (spatialGrid)
+                            auto cellIter = spatialGrid.find(neighborKey);
+                            if (cellIter == spatialGrid.end()) continue;    // Cell is empty (no mobs)
 
-                    Vector2 toNeighbor = Vector2Subtract(owls[i].GetPosition(), owls[j].GetPosition());
-                    float distSqrd = Vector2LengthSqr(toNeighbor);
+                            const std::vector<int>& neighbors = cellIter->second;   // Get the list inside the cell (bucket)
+                            for (int j : neighbors) {
+                                if (i == j) continue;   // Don't push againts self
+                                
+                                if (owls[j].GetState() == CharacterState::DEATH) continue;  // If neighbor dead, they don't push
 
-                    float overlapRadius = owls[i].radius * 2.0f;
-                    // If neighbors are overlapping (radius * 2)
-                    if (distSqrd < overlapRadius * overlapRadius) {
-                        float dist = sqrt(distSqrd);    // Optimization: only use sqrt if actaully colliding
-                        if (dist < 0.1f) dist = 0.1f;
+                                Vector2 toNeighbor = Vector2Subtract(owls[i].GetPosition(), owls[j].GetPosition());
+                                float distSqrd = Vector2LengthSqr(toNeighbor);
 
-                        Vector2 push = Vector2Scale(toNeighbor, 1.0f / dist);    // Create a vector pointing away from neighbor (same as normalizing)
+                                float overlapRadius = owls[i].radius * 2.0f;
+                                // If neighbors are overlapping (radius * 2)
+                                if (distSqrd < overlapRadius * overlapRadius) {
+                                    float dist = sqrt(distSqrd);    // Optimization: only use sqrt if actaully colliding
+                                    if (dist < 0.1f) dist = 0.1f;
 
-                        float strength = (overlapRadius - dist) / overlapRadius;    // Closer = stronger push
-                        owls[i].pushForce = Vector2Add(owls[i].pushForce, Vector2Scale(push, strength * 500.0f));
+                                    Vector2 push = Vector2Scale(toNeighbor, 1.0f / dist);    // Create a vector pointing away from neighbor (same as normalizing)
+
+                                    float strength = (overlapRadius - dist) / overlapRadius;    // Closer = stronger push
+                                    owls[i].pushForce = Vector2Add(owls[i].pushForce, Vector2Scale(push, strength * 500.0f));
+                                }
+
+                            }
                     }
                 }
             }
