@@ -16,6 +16,7 @@ class Mob : public Character {
 
         // Radius for collision/spacing
         float radius = 20.0f;
+        Vector2 pushForce = {0, 0}; // Force on each mob (chase and collisions)
 
         // Spawn logic
         // Spawn enemy at a random spot outside camera view

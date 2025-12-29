@@ -4,12 +4,13 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
 
 #include "Crow.hpp"
 #include "Owl.hpp"
 #include "Input.hpp"
 #include "CameraManager.hpp"
-#include "Particles.hpp"
+// #include "Particles.hpp"
 
 class Game {
     private:
@@ -19,10 +20,11 @@ class Game {
 
         // Systems
         CameraManager camera;
-        Particles particles;
+        // Particles particles;
         Input input;
 
         // Entities
+        std::vector<Character*> renderQueue;
         Crow crow;
         std::vector<Owl> owls;
 
@@ -51,7 +53,7 @@ class Game {
         // Game state
         float hitStopTimer = 0.0f;  // Freeze on hits
         float timeScale = 1.0f;     // Game speed
-        bool spawnTimer = 2.0f;     // spawn rate
+        float spawnTimer = 0.0f;     // Linked to spawn rate
         int currentLevel = 1;       // Level/wave
 
     public:
@@ -67,14 +69,18 @@ class Game {
         }
 
         void Init() {
-            // Setup crow
+            // Setup crow (player)
             crow.Init(Vector2{ (float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2 });
             
             // Setup camera
             camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
 
-            // Load Static Textures
+            // Setup owls (enemies)
             Owl::StaticLoad();
+            owls.reserve(2000);
+
+            // Reserve space for drawing
+            renderQueue.reserve(2001);
         }
 
         void Unload() {
@@ -112,12 +118,12 @@ class Game {
 
             // Update player and camera
             crow.Update(input, dt);
-            if (input.dashed) particles.Spawn(crow.GetPosition(), 5, DARKGRAY); // Feathers
+            // if (input.dashed) particles.Spawn(crow.GetPosition(), 5, DARKGRAY); // Feathers
 
             camera.Update(crow.GetPosition(), crow.GetFaceRight());
 
             // Spawner
-            float spawnRate = 0.2f;
+            float spawnRate = 0.0f;
             spawnTimer += GetFrameTime();
             if (spawnTimer > spawnRate) {
                 Owl owl;
@@ -128,71 +134,83 @@ class Game {
             }
 
             // Collision and physics
-
-            // Cleanup dead
-            owls.erase(std::remove_if(owls.begin(), owls.end(), [](Owl& o) {
-                return o.IsDeadAndGone();
-            }), owls.end());
-
-            // Calculate forces
-            std::vector<Vector2> pushForces(owls.size(), {0, 0});
-
-            // Calculate hitbox once per frame
-            Rectangle attackBox = crow.GetAttackBox();
-            bool isHitboxActive = (attackBox.width > 0);
+            // Reset push forces
+            for (auto& owl : owls) owl.pushForce = {0, 0};
 
             for (size_t i = 0; i < owls.size(); i++) {
-                if (owls[i].GetState() == CharacterState::DEATH) continue;
-                
-                // Player repulsion
-                // Check againts player (don't stack on top of player)
-                Vector2 toPlayer = Vector2Subtract(crow.GetPosition(), owls[i].GetPosition());
-                float distToPlayer = Vector2Length(toPlayer);
-                // If too close, push back
-                if (distToPlayer < 40.0f) {     // 40.0f is the 'personal space' radius
-                    Vector2 push = Vector2Normalize(Vector2Subtract(owls[i].GetPosition(), crow.GetPosition()));
-                    pushForces[i] = Vector2Add(pushForces[i], Vector2Scale(push, 2000.0f));
+                if (owls[i].GetState() == CharacterState::DEATH) {
+                    // Remove gone owls
+                    if (owls[i].IsDeadAndGone()) {
+                        owls[i] = owls.back();
+                        owls.pop_back();
+                        i--;
+                    } continue; // If dead, move on
                 }
+                // Chase logic
+                Vector2 toPlayer = Vector2Subtract(crow.GetPosition(), owls[i].GetPosition());
+                float distToPlayerSqr = Vector2LengthSqr(toPlayer);
+                // Calculate chase force
+                Vector2 moveDir = Vector2Normalize(toPlayer);
+                owls[i].pushForce = Vector2Add(owls[i].pushForce, Vector2Scale(moveDir, 200.0f));
+
+                // Player repulsion (if too close to player, push back)
+                if (distToPlayerSqr < 1600.0f) {     // 40.0f is the 'personal space' radius
+                    owls[i].pushForce = Vector2Subtract(owls[i].pushForce, Vector2Scale(moveDir, 2000.0f)); // Subtract instead of add
+                }
+
+                if (distToPlayerSqr > (1200.0f * 1200.0f)) continue;    // If off screen, don't calculate enemy collisions
+
                 // Check againts other owls (don't stack on top of eachother)
                 for (size_t j = 0; j < owls.size(); j++) {
                     if (i == j) continue;    // Don't push againts self
                     if (owls[j].GetState() == CharacterState::DEATH) continue;  // If neighbor dead, they don't push
 
                     Vector2 toNeighbor = Vector2Subtract(owls[i].GetPosition(), owls[j].GetPosition());
-                    float dist = Vector2Length(toNeighbor);
+                    float distSqrd = Vector2LengthSqr(toNeighbor);
 
                     float overlapRadius = owls[i].radius * 2.0f;
                     // If neighbors are overlapping (radius * 2)
-                    if (dist < overlapRadius) {
-                        Vector2 push = Vector2Normalize(toNeighbor);    // Create a vector pointing away from neighbor
+                    if (distSqrd < overlapRadius * overlapRadius) {
+                        float dist = sqrt(distSqrd);    // Optimization: only use sqrt if actaully colliding
+                        if (dist < 0.1f) dist = 0.1f;
+
+                        Vector2 push = Vector2Scale(toNeighbor, 1.0f / dist);    // Create a vector pointing away from neighbor (same as normalizing)
 
                         float strength = (overlapRadius - dist) / overlapRadius;    // Closer = stronger push
-                        pushForces[i] = Vector2Add(pushForces[i], Vector2Scale(push, strength * 500.0f));
+                        owls[i].pushForce = Vector2Add(owls[i].pushForce, Vector2Scale(push, strength * 500.0f));
                     }
                 }
             }
-
             // Update owls
+            Rectangle attackBox = crow.GetAttackBox();  // Calculate hitbox once per frame
+            bool isHitboxActive = (attackBox.width > 0);
             for (size_t i = 0; i < owls.size(); i++) {
                 // Pass in calculated force
-                owls[i].Update(crow.GetPosition(), isHitboxActive, attackBox, pushForces[i], &hitStopTimer, dt);
+                owls[i].Update(crow.GetPosition(), isHitboxActive, attackBox, owls[i].pushForce, &hitStopTimer, dt);
 
                 // Check Hit (Visual Effects)
-                if (isHitboxActive && owls[i].immunityTimer <= 0.0f && CheckCollisionRecs(attackBox, owls[i].GetHitbox())) {
-                    particles.Spawn(owls[i].GetPosition(), 15, MAROON); // Spawn blood
-                    if (owls[i].health <= 1) particles.Spawn(owls[i].GetPosition(), 30, RED); // If killed, bigger blood
-                }
+                // if (isHitboxActive && owls[i].immunityTimer <= 0.0f && CheckCollisionRecs(attackBox, owls[i].GetHitbox())) {
+                //     particles.Spawn(owls[i].GetPosition(), 15, MAROON); // Spawn blood
+                //     if (owls[i].health <= 1) particles.Spawn(owls[i].GetPosition(), 30, RED); // If killed, bigger blood
+                // }
             }
 
-            particles.Update(GetFrameTime());
+            // particles.Update(GetFrameTime());
         }
 
         void Draw() {
-            // Create a render queue then sort
-            std::vector<Character*> renderQueue;
-            renderQueue.push_back(&crow);
-            for (auto& owl : owls) renderQueue.push_back(&owl);
+            // Clear old queue
+            renderQueue.clear();
 
+            // Populate render queue then sort
+            renderQueue.push_back(&crow);
+            
+            float cullRadiusSqr = 1000.0f * 1000.0f;    // Don't draw enemies off screen
+            for (auto& owl : owls) {
+                if (Vector2DistanceSqr(crow.GetPosition(), owl.GetPosition()) < cullRadiusSqr) {
+                    renderQueue.push_back(&owl);
+                }
+            }
             std::sort(renderQueue.begin(), renderQueue.end(), [](Character* a, Character* b) {
                 return a->GetPosition().y < b->GetPosition().y;
             });
