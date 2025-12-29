@@ -7,46 +7,37 @@ class HUD {
         Texture2D bloodFill;
         Vector2 position;
         float scale;
+        int screenWidth;
 
     public:
-        void Init(int screenWidth, int screenHeight) {
-            // bloodFrame = LoadTexture();
-            // bloodFill = LoadTexture();
+        void Init(int sWidth, int sHeight) {
+            bloodFrame = LoadTexture("assets/hud/blood-border.png");
+            bloodFill = LoadTexture("assets/hud/blood-fill.png");
 
-            position = { (float)screenWidth/2, 20.0f };
+            position = { 0.0f, 0.0f };
             scale = 4.0f;
+            screenWidth = sWidth;
         }
 
         void Unload() {
-            // UnloadTexture(bloodFrame);
-            // UnloadTexture(bloodFill);
+            UnloadTexture(bloodFrame);
+            UnloadTexture(bloodFill);
         }
 
         void Draw(float bloodPercent) {
-            // Shadow
-            DrawRectangle(position.x, position.y, 300, 30, BLACK);
-            // Empty bar
-            DrawRectangle(position.x, position.y, 300, 40, DARKGRAY);
+            // Centering
+            float frameCenter = (screenWidth - bloodFrame.width*scale)/2.0f;
+            float fillCenter = (screenWidth - bloodFill.width*scale)/2.0f;
 
-            // Draw fill (blood)
-            float fillWidth = 300.0f * bloodPercent;
-            Color bloodColor = (bloodPercent < 0.2f) ? RED : MAROON;
-            DrawRectangle(position.x, position.y, (int)fillWidth, 40, bloodColor);
+            // Blood frame
+            Rectangle frameSource = { 0.0f, 0.0f, (float)bloodFrame.width, (float)bloodFrame.height };
+            Rectangle frameDest = { frameCenter, position.y, (float)bloodFrame.width*scale, (float)bloodFrame.height*scale };
+            DrawTexturePro(bloodFrame, frameSource, frameDest, {0.0f, 0.0f}, 0.0f, WHITE);
 
-            // Draw frame
-            DrawRectangleLines(position.x, position.y, 300, 40, BLACK);
-
-            // Text Label
-            DrawText("BLOOD", position.x + 10, position.y + 10, 20, RAYWHITE);
-
-            
-
-            /* Once you have sprites, replace the Rectangles with:
-           DrawTextureEx(barFrame, position, 0.0f, scale, WHITE);
-           
-           // For the fill, you'd use a source rectangle to crop the image
-           Rectangle source = {0, 0, barFill.width * bloodPercent, barFill.height};
-           DrawTextureRec(barFill, source, position, WHITE);
-            */
+            // Blood fill
+            float currentBlood = bloodFill.width * bloodPercent;    // Only grab what is remaining, not the entire blood
+            Rectangle fillSource = { 0.0f, 0.0f, (float)currentBlood, (float)bloodFill.height };
+            Rectangle fillDest = { fillCenter, position.y, (float)currentBlood*scale, (float)bloodFill.height*scale };
+            DrawTexturePro(bloodFill, fillSource, fillDest, {0.0f, 0.0f}, 0.0f, WHITE);
         }
 };

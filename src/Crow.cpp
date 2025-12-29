@@ -6,16 +6,16 @@ void Crow::Init(Vector2 startPos, int scale) {
     currentBlood = BLOOD;
 
     // Load textures
-    idleUNDEAD  = LoadTexture("assets/Charles-Idle(Undead)-Sheet.png");
-    runUNDEAD   = LoadTexture("assets/Charles-Run(Undead)-Sheet.png");
-    jumpUNDEAD  = LoadTexture("assets/Charles-Jump(Undead)-Sheet.png");
-    idleALIVE   = LoadTexture("assets/Charles-Idle-Sheet.png");
-    runALIVE    = LoadTexture("assets/Charles-Run-Sheet.png");
-    jumpALIVE   = LoadTexture("assets/Charles-Jump-Sheet.png");
-    attackSIDE  = LoadTexture("assets/Charles-SideAttack-Sheet.png");
-    attackUP    = LoadTexture("assets/Charles-UpAttack-Sheet.png");
-    attackDOWN  = LoadTexture("assets/Charles-DownAttack-Sheet.png");
-    dashTexture = LoadTexture("assets/Charles-Feather-Sheet.png");
+    idleUNDEAD  = LoadTexture("assets/crow/Charles-Idle(Undead)-Sheet.png");
+    runUNDEAD   = LoadTexture("assets/crow/Charles-Run(Undead)-Sheet.png");
+    jumpUNDEAD  = LoadTexture("assets/crow/Charles-Jump(Undead)-Sheet.png");
+    idleALIVE   = LoadTexture("assets/crow/Charles-Idle-Sheet.png");
+    runALIVE    = LoadTexture("assets/crow/Charles-Run-Sheet.png");
+    jumpALIVE   = LoadTexture("assets/crow/Charles-Jump-Sheet.png");
+    attackSIDE  = LoadTexture("assets/crow/Charles-SideAttack-Sheet.png");
+    attackUP    = LoadTexture("assets/crow/Charles-UpAttack-Sheet.png");
+    attackDOWN  = LoadTexture("assets/crow/Charles-DownAttack-Sheet.png");
+    dashTexture = LoadTexture("assets/crow/Charles-Feather-Sheet.png");
 
     // Load Undead animations
     undeadIDLE.Init(idleUNDEAD, 6, 8.0f, size); undeadAnims[CharacterState::IDLE] = undeadIDLE;
@@ -33,7 +33,7 @@ void Crow::Init(Vector2 startPos, int scale) {
     // Dash animation
     dashAnim.Init(dashTexture, 10, 10.0f, size, false); aliveAnims[CharacterState::DASH] = dashAnim;
 
-    shadow = LoadTexture("assets/Charles-Shadow.png");
+    shadow = LoadTexture("assets/Shadow.png");
     // Default
     animations = undeadAnims;
 }

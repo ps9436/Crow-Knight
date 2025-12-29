@@ -56,18 +56,19 @@ class Crow : public Character {
         float GetBloodPercent();
         bool IsAlive() const;
 
-        void Reset(Vector2 startPos) {////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!
-        position = startPos;
-        currentBlood = BLOOD;
-        currentState = CharacterState::IDLE;
-        currentForm = CrowForm::UNDEAD;
-        faceRight = true;
-        
-        // Reset Physics
-        velocity = { 0, 0 };
-        z = 0.0f;
-        zVelocity = 0.0f;
-    }
+        void Reset(Vector2 startPos) {
+            position = startPos;
+            currentBlood = BLOOD;
+            currentState = CharacterState::IDLE;
+            if (animations.count(currentState) > 0) animations[currentState].Reset();
+            currentForm = CrowForm::UNDEAD;
+            faceRight = false;
+            
+            // Reset Physics
+            velocity = { 0, 0 };
+            z = 0.0f;
+            zVelocity = 0.0f;
+        }
 
         // Where crow gets hit
         Rectangle GetHitbox() override {

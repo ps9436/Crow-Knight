@@ -47,7 +47,7 @@ struct Animation {
         };
         Rectangle dest = { position.x, position.y, width * scale, height * scale};
 
-        // Change {0,0} to {dest.width/2,dest.height/2} for center sprite drawing
+        // Instead of {0,0} to {dest.width/2,dest.height/2} for center sprite drawing
         DrawTexturePro(texture, source, dest, {dest.width/2,dest.height/2}, 0.0f, WHITE);      
     }
 

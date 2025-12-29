@@ -3,7 +3,7 @@
 #include "Mob.hpp"
 #include "Input.hpp"
 
-class Owl : public Mob {
+class Goblin : public Mob {
     private:
         Animation owlRUN;
         Animation owlRevRUN;
@@ -16,16 +16,16 @@ class Owl : public Mob {
         static inline Texture2D deadOWL;
         static inline Texture2D shadowOWL;
 
-        Owl () {
+        Goblin () {
             this->shadow = shadowOWL;
         }
 
         // Load owl textures
         static void StaticLoad() {
-            Owl::runOWL = LoadTexture("assets/goblin-run.png");
-            Owl::hurtOWL = LoadTexture("assets/goblin-hurt.png");
-            Owl::deadOWL = LoadTexture("assets/goblin-death2.png");
-            Owl::shadowOWL = LoadTexture("assets/Charles-Shadow.png");
+            Goblin::runOWL = LoadTexture("assets/goblin/goblin-run.png");
+            Goblin::hurtOWL = LoadTexture("assets/goblin/goblin-hurt.png");
+            Goblin::deadOWL = LoadTexture("assets/goblin/goblin-death.png");
+            Goblin::shadowOWL = LoadTexture("assets/Shadow.png");
         }
 
         static void StaticUnload() {
