@@ -22,9 +22,9 @@ class Goblin : public Mob {
 
         // Load owl textures
         static void StaticLoad() {
-            Goblin::runOWL = LoadTexture("assets/goblin/goblin-run.png");
-            Goblin::hurtOWL = LoadTexture("assets/goblin/goblin-hurt.png");
-            Goblin::deadOWL = LoadTexture("assets/goblin/goblin-death.png");
+            Goblin::runOWL = LoadTexture("assets/goblin/goblin-run-Sheet.png");
+            Goblin::hurtOWL = LoadTexture("assets/goblin/goblin-hurt-Sheet.png");
+            Goblin::deadOWL = LoadTexture("assets/goblin/goblin-death-Sheet.png");
             Goblin::shadowOWL = LoadTexture("assets/Shadow.png");
         }
 

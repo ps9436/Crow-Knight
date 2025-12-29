@@ -68,6 +68,7 @@ class Game {
         float hitStopTimer = 0.0f;  // Freeze on hits
         float timeScale = 1.0f;     // Game speed
         float spawnTimer = 0.0f;    // Linked to spawn rate
+        float spawnRate = 0.0f;     // Spawn rate
         int currentLevel = 1;       // Level/wave
 
     public:
@@ -139,7 +140,6 @@ class Game {
             camera.Update(crow.GetPosition(), crow.GetFaceRight());
 
             // Spawner
-            float spawnRate = 0.5f; // Spawn rate
             spawnTimer += GetFrameTime();
             if (spawnTimer > spawnRate) {
                 Goblin goblin;
