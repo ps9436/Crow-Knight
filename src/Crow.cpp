@@ -141,7 +141,18 @@ void Crow::Update(Input input, float dt) {
     }
 
     // Try to switch states
-    if (newState != currentState) {
+    // If we are attacking again
+    if (newState == CharacterState::ATTACK_DOWN || 
+        newState == CharacterState::ATTACK_UP || 
+        newState == CharacterState::ATTACK_SIDE) {
+            if (CanInterrupt(newState)) {
+                currentState = newState;
+                if(animations.count(currentState) > 0) {
+                    animations[currentState].Reset();
+                }
+            }
+        }
+    else if (newState != currentState) {
         if (CanInterrupt(newState)) {
             currentState = newState;
             // Safety check before resetting
@@ -151,7 +162,7 @@ void Crow::Update(Input input, float dt) {
         }
     }
 
-    // Form switching (stabbing)
+    // Form switching (stabbing)`
     if (input.special) {
         Special();
     }
@@ -173,6 +184,7 @@ void Crow::Update(Input input, float dt) {
 }
 
 void Crow::Draw() {
+    DrawText(TextFormat("Frame: %i", GetCurrentFrame()), position.x, position.y - 50, 20, DARKGRAY);
     if (!dashAnim.IsFinished()) {
         dashAnim.Draw(dashEffectPos);
     }
@@ -223,7 +235,10 @@ bool Crow::CanInterrupt(CharacterState nextState) {
         // Attack cancel with dashs
         if (nextState == CharacterState::DASH) return true;
         // Can cancel after active frames
-        if (animations[currentState].currentFrame > 2 /* NOTE: "2" is the active frames */) return true;
+        if ((nextState == CharacterState::ATTACK_DOWN || 
+            nextState == CharacterState::ATTACK_UP || 
+            nextState == CharacterState::ATTACK_SIDE) &&
+            animations[currentState].currentFrame > 0 /* NOTE: "1" is the active frames */) return true;
         // Wait for animation to finish otherwise
         if (animations[currentState].IsFinished()) return true;
         return false;   // Locked in animation

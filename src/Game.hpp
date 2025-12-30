@@ -129,8 +129,8 @@ class Game {
             input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
             input.jumped = IsKeyPressed(KEY_SPACE);
             input.attacked = IsKeyPressed(KEY_J);
-            input.special = IsKeyPressed(KEY_E);
-            input.dashed = IsKeyPressed(KEY_I);
+            input.special = IsKeyPressed(KEY_I);
+            input.dashed = IsKeyPressed(KEY_L);
             if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
 
             // Update player and camera
@@ -283,6 +283,7 @@ class Game {
 
                 // Draw debug boxes
                 // if (crow.GetAttackBox().width > 0) DrawRectangleLinesEx(crow.GetAttackBox(), 3, RED);
+                // DrawRectangleLinesEx(crow.GetHitbox(), 3, RED);
                 // for (auto& goblin: goblins) DrawRectangleLinesEx(goblin.GetHitbox(), 3, RED);
 
             EndMode2D();

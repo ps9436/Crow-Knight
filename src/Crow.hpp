@@ -14,12 +14,12 @@ class Crow : public Character {
         float speed = 350.0f;
         float BLOOD = 100.0f;
         float currentBlood = 100.0f;
-        float bloodDrainRate = 5.0f;
+        float bloodDrainRate = 1.0f;
 
         // Dash logic
         float dashDuration = 0.15f;
         float dashTimer = 0.0f;
-        float dashCost = 5.0f;
+        float dashCost = 0.0f;
         Vector2 dashStartPos;
         Vector2 dashTargetPos;
 
@@ -72,6 +72,7 @@ class Crow : public Character {
 
         // Where crow gets hit
         Rectangle GetHitbox() override {
+            if (currentState == CharacterState::JUMP) return {0,0,0,0}; // Invincible while jumping
             float offX = faceRight ? 0.0f : 10.0f;
             float offY = 9.0f;
             float zOffset = (z > 0.0f) ? z : 0.0f;
@@ -83,7 +84,7 @@ class Crow : public Character {
             // If not attacking, return nothing
             if (!IsAttacking()) return { 0, 0, 0, 0 };
             // Active frames are frame 1
-            if (GetCurrentFrame() < 1) return { 0, 0, 0, 0};
+            if (GetCurrentFrame() < 1 || GetCurrentFrame() > 2) return { 0, 0, 0, 0};
 
             // Width, Height, Offset center
             float w, h, offY, offX;

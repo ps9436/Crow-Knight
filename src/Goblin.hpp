@@ -5,57 +5,54 @@
 
 class Goblin : public Mob {
     private:
-        Animation owlRUN;
-        Animation owlRevRUN;
-        Animation owlHURT;
-        Animation owlDEATH;
+        Animation goblinRUN;
+        Animation goblinRevRUN;
+        Animation goblinHURT;
+        Animation goblinDEATH;
 
     public:
-        static inline Texture2D runOWL;
-        static inline Texture2D hurtOWL;
-        static inline Texture2D deadOWL;
-        static inline Texture2D shadowOWL;
+        static inline Texture2D runGoblin;
+        static inline Texture2D hurtGoblin;
+        static inline Texture2D deadGoblin;
+        static inline Texture2D shadowGoblin;
 
         Goblin () {
-            this->shadow = shadowOWL;
+            this->shadow = shadowGoblin;
         }
 
-        // Load owl textures
+        // Load goblin textures
         static void StaticLoad() {
-            Goblin::runOWL = LoadTexture("assets/goblin/goblin-run-Sheet.png");
-            Goblin::hurtOWL = LoadTexture("assets/goblin/goblin-hurt-Sheet.png");
-            Goblin::deadOWL = LoadTexture("assets/goblin/goblin-death-Sheet.png");
-            Goblin::shadowOWL = LoadTexture("assets/Shadow.png");
+            Goblin::runGoblin = LoadTexture("assets/goblin/goblin-run-Sheet.png");
+            Goblin::hurtGoblin = LoadTexture("assets/goblin/goblin-hurt-Sheet.png");
+            Goblin::deadGoblin = LoadTexture("assets/goblin/goblin-death-Sheet.png");
+            Goblin::shadowGoblin = LoadTexture("assets/Shadow.png");
         }
 
         static void StaticUnload() {
-            UnloadTexture(runOWL);
-            UnloadTexture(hurtOWL);
-            UnloadTexture(deadOWL);
-            UnloadTexture(shadowOWL);
+            UnloadTexture(runGoblin);
+            UnloadTexture(hurtGoblin);
+            UnloadTexture(deadGoblin);
+            UnloadTexture(shadowGoblin);
         }
 
-        void init(int scale = 4) {
+        void init(int scale = 8) {
             // Stats
             size = scale;
-            speed = 250.0f;
-            health = 2;
-            weight = 1.0f;
+            speed = 150.0f;
+            health = 5;
+            weight = 0.0f;
 
-            owlRUN.Init(runOWL, 4, 12.0f, scale);
-            animations[CharacterState::RUN] = owlRUN;
+            goblinRUN.Init(runGoblin, 4, 8.0f, scale);
+            animations[CharacterState::RUN] = goblinRUN;
+            
+            goblinHURT.Init(hurtGoblin, 4, 12.0f, scale);
+            animations[CharacterState::HURT] = goblinHURT;
 
-            // owlRevRUN.Init(revrunOWL, 4, 16.0f, scale);
-            // animations[CharacterState::RUN] = owlRevRUN;
-
-            owlHURT.Init(hurtOWL, 4, 16.0f, scale);
-            animations[CharacterState::HURT] = owlHURT;
-
-            owlDEATH.Init(deadOWL, 8, 8.0f, scale, false);
-            animations[CharacterState::DEATH] = owlDEATH;
+            goblinDEATH.Init(deadGoblin, 8, 8.0f, scale, false);
+            animations[CharacterState::DEATH] = goblinDEATH;
 
             // Default
-            animations[CharacterState::IDLE] = owlRUN;
+            animations[CharacterState::IDLE] = goblinRUN;
             currentState = CharacterState::RUN;
         }
 
