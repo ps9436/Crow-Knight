@@ -68,11 +68,7 @@ class Game {
         float hitStopTimer = 0.0f;  // Freeze on hits
         float timeScale = 1.0f;     // Game speed
         float spawnTimer = 0.0f;    // Linked to spawn rate
-<<<<<<< Updated upstream
         float spawnRate = 0.0f;     // Spawn rate
-=======
-        float spawnRate = 0.1f;     // Spawn rate
->>>>>>> Stashed changes
         int currentLevel = 1;       // Level/wave
 
     public:
@@ -133,8 +129,8 @@ class Game {
             input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
             input.jumped = IsKeyPressed(KEY_SPACE);
             input.attacked = IsKeyPressed(KEY_J);
-            input.special = IsKeyPressed(KEY_I);
-            input.dashed = IsKeyPressed(KEY_L);
+            input.special = IsKeyPressed(KEY_L);
+            input.dashed = IsKeyPressed(KEY_I);
             if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
 
             // Update player and camera
@@ -239,7 +235,7 @@ class Game {
                 goblins[i].Update(crow.GetPosition(), isHitboxActive, attackBox, goblins[i].pushForce, &hitStopTimer, dt);
 
                 // Damage and heal logic
-                if (goblins[i].health < oldgoblinHP && isHitboxActive && CheckCollisionRecs(attackBox, goblins[i].GetHitbox())) crow.Heal(0.5f);    // 1 is heal factor for killing goblins
+                if (goblins[i].health < oldgoblinHP && isHitboxActive && CheckCollisionRecs(attackBox, goblins[i].GetHitbox())) crow.LifeSteal(1.0f);    // 1 is lifesteal for killing goblins
                 if (goblins[i].health > 0 && CheckCollisionRecs(crow.GetHitbox(), goblins[i].GetHitbox())) crow.TakeDamage(20.0f);   // goblins hit 20 per second
                 if (crow.GetState() == CharacterState::DEATH) {
                     ResetGame();
@@ -297,7 +293,7 @@ class Game {
             DrawText(TextFormat("Enemies: %i", goblins.size()), 10, 40, 20, DARKGRAY);
 
             // Draw HUD
-            hud.Draw(crow.GetBloodPercent());
+            hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent());
 
             EndDrawing();
         }

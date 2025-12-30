@@ -14,13 +14,9 @@ class Crow : public Character {
         float speed = 350.0f;
         float BLOOD = 100.0f;
         float currentBlood = 100.0f;
-<<<<<<< Updated upstream
-        float bloodDrainRate = 1.0f;
-=======
         float bloodDrainRate = 5.0f;
         float lifeSteal = 0.5f;     // rate of lifesteal
         float lifeStolen = 0.0f;
->>>>>>> Stashed changes
 
         // Dash logic
         float dashDuration = 0.15f;
@@ -57,13 +53,11 @@ class Crow : public Character {
         void Update(Input input, float dt);
         void Draw();
         // Combat logic
-        void Heal(float amount);
+        void LifeSteal(float amount);
+        void Heal();
         void TakeDamage(float amount);
         float GetBloodPercent();
-<<<<<<< Updated upstream
-=======
         float GetLifeStealPercent();
->>>>>>> Stashed changes
         bool IsAlive() const;
 
         void Reset(Vector2 startPos) {
@@ -82,7 +76,7 @@ class Crow : public Character {
 
         // Where crow gets hit
         Rectangle GetHitbox() override {
-            if (currentState == CharacterState::JUMP) return {0,0,0,0}; // Invincible while jumping
+            if (z > 0.0f) return {0,0,0,0}; // Invincible while jumping
             float offX = faceRight ? 0.0f : 10.0f;
             float offY = 9.0f;
             float zOffset = (z > 0.0f) ? z : 0.0f;

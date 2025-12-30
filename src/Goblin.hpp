@@ -35,12 +35,12 @@ class Goblin : public Mob {
             UnloadTexture(shadowGoblin);
         }
 
-        void init(int scale = 8) {
+        void init(int scale = 4) {
             // Stats
             size = scale;
             speed = 150.0f;
-            health = 5;
-            weight = 0.0f;
+            health = 2;
+            weight = 1.0f;
 
             goblinRUN.Init(runGoblin, 4, 8.0f, scale);
             animations[CharacterState::RUN] = goblinRUN;

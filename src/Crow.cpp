@@ -54,6 +54,8 @@ void Crow::Unload() {
 void Crow::Update(Input input, float dt) {
     dashAnim.Update(dt);    // Update dash animation independent of dash
 
+    if (currentForm == CrowForm::UNDEAD) Heal();
+
     if (currentForm == CrowForm::ALIVE && currentState != CharacterState::DEATH) {
         currentBlood -= bloodDrainRate * dt;
         if (currentBlood <= 0.0f) {
@@ -191,11 +193,6 @@ void Crow::Draw() {
     Character::Draw();
 }
 
-<<<<<<< Updated upstream
-void Crow::Heal(float amount) {
-    currentBlood += amount;
-    if (currentBlood > BLOOD) currentBlood = BLOOD;
-=======
 void Crow::LifeSteal(float amount) {
     lifeStolen += amount * lifeSteal;
     if (lifeStolen >= BLOOD) lifeStolen = BLOOD;
@@ -214,7 +211,6 @@ void Crow::Heal() {
         if (currentBlood >= BLOOD) currentBlood = BLOOD;
         if (lifeStolen <= 0) lifeStolen = 0.0f;
     }
->>>>>>> Stashed changes
 }
 
 void Crow::TakeDamage(float dps) {
