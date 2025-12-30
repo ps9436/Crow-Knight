@@ -68,7 +68,7 @@ class Game {
         float hitStopTimer = 0.0f;  // Freeze on hits
         float timeScale = 1.0f;     // Game speed
         float spawnTimer = 0.0f;    // Linked to spawn rate
-        float spawnRate = 0.0f;     // Spawn rate
+        float spawnRate = 0.5f;     // Spawn rate
         int currentLevel = 1;       // Level/wave
 
     public:
@@ -107,13 +107,9 @@ class Game {
         }
 
         void Update() {
-            // Time management
-            if (IsKeyPressed(KEY_MINUS)) timeScale -= 0.1f;
-            if (IsKeyPressed(KEY_EQUAL)) timeScale += 0.1f;
-            if (IsKeyPressed(KEY_ZERO))  timeScale = 0.0f;
-            if (IsKeyPressed(KEY_R))     timeScale = 1.0f;
-            if (timeScale < 0.0f) timeScale = 0.0f;
             
+            InputHandler();
+
             float dt;
             // Handle Hit Stop Timer
             if (hitStopTimer > 0.0f) {
@@ -123,15 +119,6 @@ class Game {
                 // Normal time calculation
                 dt = GetFrameTime() * timeScale;
             }
-
-            // Handle inputs
-            input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
-            input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
-            input.jumped = IsKeyPressed(KEY_SPACE);
-            input.attacked = IsKeyPressed(KEY_J);
-            input.special = IsKeyPressed(KEY_L);
-            input.dashed = IsKeyPressed(KEY_I);
-            if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
 
             // Update player and camera
             crow.Update(input, dt);
@@ -314,6 +301,24 @@ class Game {
             
             // Clear Spatial Grid
             spatialGrid.clear();
+        }
+
+        void InputHandler() {
+             // Time management
+            if (IsKeyPressed(KEY_MINUS)) timeScale -= 0.1f;
+            if (IsKeyPressed(KEY_EQUAL)) timeScale += 0.1f;
+            if (IsKeyPressed(KEY_ZERO))  timeScale = 0.0f;
+            if (IsKeyPressed(KEY_R))     timeScale = 1.0f;
+            if (timeScale < 0.0f) timeScale = 0.0f;
+
+            // Handle player inputs
+            input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
+            input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
+            input.jumped = IsKeyPressed(KEY_SPACE);
+            input.attacked = IsKeyPressed(KEY_J);
+            input.special = IsKeyPressed(KEY_L);
+            input.dashed = IsKeyPressed(KEY_I);
+            if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
         }
 
 };

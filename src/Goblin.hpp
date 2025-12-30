@@ -6,7 +6,6 @@
 class Goblin : public Mob {
     private:
         Animation goblinRUN;
-        Animation goblinRevRUN;
         Animation goblinHURT;
         Animation goblinDEATH;
 
@@ -36,11 +35,12 @@ class Goblin : public Mob {
         }
 
         void init(int scale = 4) {
-            // Stats
+            // Stats (unique to goblin)
             size = scale;
             speed = 150.0f;
             health = 2;
             weight = 1.0f;
+            radius = 20.0f;
 
             goblinRUN.Init(runGoblin, 4, 8.0f, scale);
             animations[CharacterState::RUN] = goblinRUN;
@@ -57,8 +57,8 @@ class Goblin : public Mob {
         }
 
         Rectangle GetHitbox() override {
-            float offX = faceRight ? 5.0f : 13.0f;
-            float offY = 13.0f;
-            return { position.x - (offX * size), position.y - (offY * size), 18 * size, 21 * size };
+            float offX = faceRight ? 3.0f : 12.0f;
+            float offY = 11.0f;
+            return { position.x - (offX * size), position.y - (offY * size), 16 * size, 21 * size };
         }
 };

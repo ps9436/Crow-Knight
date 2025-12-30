@@ -18,7 +18,6 @@ class HUD {
             lifeStealFrame = LoadTexture("assets/hud/lifesteal-border.png");
             lifeStealFill = LoadTexture("assets/hud/lifesteal-fill.png");
 
-
             position = { 0.0f, 0.0f };
             scale = 4.0f;
             screenWidth = sWidth;

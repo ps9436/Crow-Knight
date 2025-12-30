@@ -15,7 +15,7 @@ class Mob : public Character {
         float deadTimer = 0.0f;
 
         // Radius for collision/spacing
-        float radius = 20.0f;
+        float radius;
         Vector2 pushForce = {0, 0}; // Force on each mob (chase and collisions)
 
         // Spawn logic
@@ -163,10 +163,6 @@ class Mob : public Character {
             }
         }
 
-        virtual void Draw() override {
-            Character::Draw();
-        }
-
         bool IsDeadAndGone() {
             if (currentState != CharacterState::DEATH) return false;
             
@@ -177,4 +173,10 @@ class Mob : public Character {
             }
             return true; // If no animation exists, remove instantly
         }
-};
+     
+        virtual void Draw() override {
+            Character::Draw();
+        }
+
+        virtual void LifeStealRate();
+    };
