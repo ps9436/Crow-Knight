@@ -14,7 +14,13 @@ class Crow : public Character {
         float speed = 350.0f;
         float BLOOD = 100.0f;
         float currentBlood = 100.0f;
+<<<<<<< Updated upstream
         float bloodDrainRate = 1.0f;
+=======
+        float bloodDrainRate = 5.0f;
+        float lifeSteal = 0.5f;     // rate of lifesteal
+        float lifeStolen = 0.0f;
+>>>>>>> Stashed changes
 
         // Dash logic
         float dashDuration = 0.15f;
@@ -54,6 +60,10 @@ class Crow : public Character {
         void Heal(float amount);
         void TakeDamage(float amount);
         float GetBloodPercent();
+<<<<<<< Updated upstream
+=======
+        float GetLifeStealPercent();
+>>>>>>> Stashed changes
         bool IsAlive() const;
 
         void Reset(Vector2 startPos) {

@@ -191,9 +191,30 @@ void Crow::Draw() {
     Character::Draw();
 }
 
+<<<<<<< Updated upstream
 void Crow::Heal(float amount) {
     currentBlood += amount;
     if (currentBlood > BLOOD) currentBlood = BLOOD;
+=======
+void Crow::LifeSteal(float amount) {
+    lifeStolen += amount * lifeSteal;
+    if (lifeStolen >= BLOOD) lifeStolen = BLOOD;
+}
+
+void Crow::Heal() {
+    if (currentBlood >= BLOOD) return;
+    if (lifeStolen >= BLOOD) {
+        currentBlood += lifeStolen;                     // If lifesteal full then heal instantly
+        if (currentBlood >= BLOOD) currentBlood = BLOOD;
+        lifeStolen = 0.0f;
+    }
+    else {
+        currentBlood += lifeStolen * lifeSteal * GetFrameTime();    // Otherwise heal over time
+        lifeStolen -= lifeStolen * lifeSteal * GetFrameTime();
+        if (currentBlood >= BLOOD) currentBlood = BLOOD;
+        if (lifeStolen <= 0) lifeStolen = 0.0f;
+    }
+>>>>>>> Stashed changes
 }
 
 void Crow::TakeDamage(float dps) {
@@ -208,6 +229,10 @@ void Crow::TakeDamage(float dps) {
 
 float Crow::GetBloodPercent() {
     return currentBlood / BLOOD;
+}
+
+float Crow::GetLifeStealPercent() {
+    return lifeStolen / BLOOD;
 }
 
 bool Crow::IsAlive() const {return currentBlood > 0.0f; }

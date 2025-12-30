@@ -68,7 +68,11 @@ class Game {
         float hitStopTimer = 0.0f;  // Freeze on hits
         float timeScale = 1.0f;     // Game speed
         float spawnTimer = 0.0f;    // Linked to spawn rate
+<<<<<<< Updated upstream
         float spawnRate = 0.0f;     // Spawn rate
+=======
+        float spawnRate = 0.1f;     // Spawn rate
+>>>>>>> Stashed changes
         int currentLevel = 1;       // Level/wave
 
     public:
