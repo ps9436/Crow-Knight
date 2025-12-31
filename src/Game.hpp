@@ -201,10 +201,21 @@ class Game {
             camera.Update(crow.GetPosition(), crow.GetFaceRight());
 
             spatialGrid.clear();
-            // Populate the grid (put every mob in a bucket)
             for (size_t i = 0; i < mobs.size(); i++) {
-                if (mobs[i]->GetState() == CharacterState::DEATH) continue;
+                // Don't grid dead mobs
+                if (mobs[i]->GetState() == CharacterState::DEATH) {
+                    // Remove gone mobs
+                    if (mobs[i]->IsDeadAndGone()) {
+                        mobs[i] = std::move(mobs.back());   // Don't copy address, actually move the pointer
+                        mobs.pop_back();
+                        i--;
+                        continue; // If gone, move on
+                    } 
+                    mobs[i]->Update(crow.GetPosition(), false, {0,0,0,0}, {0,0}, &hitStopTimer, dt);    // If dead but not gone
+                    continue; // If dead, move on
+                }
 
+                // Populate the grid (put every mob in a bucket)
                 // Don't grid far away mobs
                 if (Vector2DistanceSqr(crow.GetPosition(), mobs[i]->GetPosition()) < 1500.0f * 1500.0f) {
                     int key = GetGridKey(mobs[i]->GetPosition());
@@ -215,21 +226,13 @@ class Game {
             // Collision and Physics
             Rectangle attackBox = crow.GetAttackBox();  // Calculate hitbox once per frame
             bool isHitboxActive = (attackBox.width > 0);
-            // Reset mob push forces
-            for (auto& mob : mobs) mob->pushForce = {0, 0};
 
             for (size_t i = 0; i < mobs.size(); i++) {
-                // Remove gone mobs
-                if (mobs[i]->GetState() == CharacterState::DEATH) {
-                    if (mobs[i]->IsDeadAndGone()) {
-                        mobs[i] = std::move(mobs.back());   // Don't copy address, actually move the pointer
-                        mobs.pop_back();
-                        i--;
-                        continue; // If gone, move on
-                    } 
-                    mobs[i]->Update(crow.GetPosition(), false, {0,0,0,0}, {0,0}, &hitStopTimer, dt);    // If dead but not gone
-                    continue; // If dead, move on
-                }
+                // Don't update dead mobs (already did)
+                if (mobs[i]->GetState() == CharacterState::DEATH) continue;
+
+                // Reset mob push forces;
+                mobs[i]->pushForce = {0, 0};
 
                 // Chase logic
                 Vector2 toPlayer = Vector2Subtract(crow.GetPosition(), mobs[i]->GetPosition());

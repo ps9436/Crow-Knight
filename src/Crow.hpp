@@ -64,9 +64,10 @@ class Crow : public Character {
         void Reset(Vector2 startPos) {
             position = startPos;
             currentBlood = BLOOD;
+            currentForm = CrowForm::UNDEAD;
+            animations = undeadAnims;
             currentState = CharacterState::IDLE;
             if (animations.count(currentState) > 0) animations[currentState].Reset();
-            currentForm = CrowForm::UNDEAD;
             faceRight = false;
             
             // Reset Physics
