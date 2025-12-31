@@ -37,10 +37,12 @@ class Goblin : public Mob {
         void init(int scale = 4) {
             // Stats (unique to goblin)
             size = scale;
-            speed = 150.0f;
+            speed = 200.0f;
             health = 2;
             weight = 1.0f;
             radius = 20.0f;
+            damageRate = 20.0f;
+            lifestealRate = 1.0f;
 
             goblinRUN.Init(runGoblin, 4, 8.0f, scale);
             animations[CharacterState::RUN] = goblinRUN;

@@ -201,7 +201,7 @@ void Crow::LifeSteal(float amount) {
 void Crow::Heal() {
     if (currentBlood >= BLOOD) return;
     if (lifeStolen >= BLOOD) {
-        currentBlood += lifeStolen;                     // If lifesteal full then heal instantly
+        currentBlood += lifeStolen;     // If lifesteal full then heal instantly
         if (currentBlood >= BLOOD) currentBlood = BLOOD;
         lifeStolen = 0.0f;
     }
@@ -259,7 +259,7 @@ bool Crow::CanInterrupt(CharacterState nextState) {
         if ((nextState == CharacterState::ATTACK_DOWN || 
             nextState == CharacterState::ATTACK_UP || 
             nextState == CharacterState::ATTACK_SIDE) &&
-            animations[currentState].currentFrame > 0 /* NOTE: "1" is the active frames */) return true;
+            animations[currentState].currentFrame > attackSpeed) return true;
         // Wait for animation to finish otherwise
         if (animations[currentState].IsFinished()) return true;
         return false;   // Locked in animation
@@ -284,9 +284,9 @@ void Crow::Special()
 
 float Crow::EaseInOutQuad(float t) {
     if (t < 0.5f) {
-        return 2.0f * t * t;
+        return 2.0f * t * t;    // Accelerate
     } else {
-        return -1.0f + (4.0f - 2.0f * t) * t;
+        return -1.0f + (4.0f - 2.0f * t) * t;   // Decelerate
     }
 }
 
@@ -309,7 +309,7 @@ void Crow::Dash(Input input, float dt) {
         // Interpolate position
         float progress = EaseInOutQuad(time);
 
-        // Lerp formula: Start + (End - Start) * Progress
+        // Lerp formula:postion = Start + (End - Start) * Progress
         position.x = dashStartPos.x + (dashTargetPos.x - dashStartPos.x) * progress;
         position.y = dashStartPos.y + (dashTargetPos.y - dashStartPos.y) * progress;
     }

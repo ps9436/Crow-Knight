@@ -41,6 +41,8 @@ class Orc : public Mob {
             health = 3;
             weight = 0.75f;
             radius = 20.0f;
+            damageRate = 20.0f;
+            lifestealRate = 1.0f;
 
             orcRUN.Init(runOrc, 4, 8.0f, scale);
             animations[CharacterState::RUN] = orcRUN;

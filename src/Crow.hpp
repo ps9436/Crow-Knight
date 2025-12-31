@@ -10,16 +10,17 @@ class Crow : public Character {
         CrowForm currentForm = CrowForm::UNDEAD;
 
         // Crow Stats
-        float jumpPower = 800.0f;
-        float speed = 350.0f;
+        int attackSpeed = 3;       // Lower is faster 3 -> 0
+        float jumpPower = 500.0f;
+        float speed = 300.0f;
         float BLOOD = 100.0f;
         float currentBlood = 100.0f;
         float bloodDrainRate = 5.0f;
-        float lifeSteal = 0.5f;     // rate of lifesteal
+        float lifeSteal = 0.5f;     // Rate/amount of lifesteal
         float lifeStolen = 0.0f;
 
         // Dash logic
-        float dashDuration = 0.15f;
+        float dashDuration = 0.15f; // How fast dash is executed
         float dashTimer = 0.0f;
         float dashCost = 0.0f;
         Vector2 dashStartPos;

@@ -5,11 +5,14 @@
 
 class Mob : public Character {
     public:
-        float speed;
         int health;
-        int damageCounter = 0;  // Stun
-        Vector2 knockback = { 0.0f, 0.0f };
+        int stunCounter = 0;    // Stun timer
+        int stunAmount = 20;    // 20 minimum
         float weight = 1.0f;    // < 1.0 heavy, > 1.0 light
+        float speed;
+        float damageRate;       // Mob damage amount
+        float lifestealRate;    // How much crow lifesteals
+        Vector2 knockback = { 0.0f, 0.0f };
 
         float immunityTimer = 0.0f;
         float deadTimer = 0.0f;
@@ -18,46 +21,17 @@ class Mob : public Character {
         float radius;
         Vector2 pushForce = {0, 0}; // Force on each mob (chase and collisions)
 
-        // Spawn logic
-        // Spawn enemy at a random spot outside camera view
-        void Spawn(Vector2 playerPos, int screenW, int screenH) {
-            // Reset
+        // Spawn enemy at the random spot
+        void SpawnAt(Vector2 spawnPos) {
+            // Reset state
+            position = spawnPos;
             deadTimer = 0.0f;
+            immunityTimer = 0.0f;
             currentState = CharacterState::RUN;
 
-            // Edges of the camera view
-            float leftEdge   = playerPos.x - (screenW / 2);
-            float rightEdge  = playerPos.x + (screenW / 2);
-            float topEdge    = playerPos.y - (screenH / 2);
-            float bottomEdge = playerPos.y + (screenH / 2);
-
-            int buffer = GetRandomValue(-50, 10); // Distance outside the screen
-            int side = GetRandomValue(0, 3);
-
-            switch(side) {
-                case 0: // Left Wall
-                    // X is fixed, Y is Random (Top to Bottom)
-                    position.x = leftEdge - buffer;
-                    position.y = (float)GetRandomValue((int)topEdge, (int)bottomEdge); 
-                    break;
-
-                case 1: // Right Wall
-                    // X is fixed, Y is Random (Top to Bottom)
-                    position.x = rightEdge + buffer;
-                    position.y = (float)GetRandomValue((int)topEdge, (int)bottomEdge);
-                    break;
-
-                case 2: // Top Wall
-                    // X is Random (Left to Right), Y is Fixed
-                    position.x = (float)GetRandomValue((int)leftEdge, (int)rightEdge);
-                    position.y = topEdge - buffer;
-                    break;
-
-                case 3: // Bottom Wall
-                    // X is Random (Left to Right), Y is Fixed
-                    position.x = (float)GetRandomValue((int)leftEdge, (int)rightEdge);
-                    position.y = bottomEdge + buffer;
-                    break;
+            // Reset animations
+            if (animations.count(CharacterState::RUN)) {
+                animations[CharacterState::RUN].Reset();
             }
         }
         
@@ -72,7 +46,7 @@ class Mob : public Character {
             // Death logic
             if (currentState == CharacterState::DEATH) {
                 deadTimer += dt;
-                damageCounter++;
+                stunCounter++;
                 
                 // Apply knockback
                 position = Vector2Add(position, Vector2Scale(knockback, dt));
@@ -83,14 +57,14 @@ class Mob : public Character {
 
                 // Shake effect
                 if (deadTimer < 0.2f) {
-                    if (damageCounter % 4 < 2) position.x -= 5; 
+                    if (stunCounter % 4 < 2) position.x -= 5; 
                     else position.x += 5;
                 }
                 return;     // Don't need other checks
             }
             // Hurt logic
             if (currentState == CharacterState::HURT) {
-                damageCounter++;
+                stunCounter++;
 
                 // Apply knockback
                 position = Vector2Add(position, Vector2Scale(knockback, dt));
@@ -101,13 +75,13 @@ class Mob : public Character {
                 knockback = Vector2Scale(knockback, friction);
 
                 // Shake effect
-                if (damageCounter % 4 < 2) position.x -= 5; 
+                if (stunCounter % 4 < 2) position.x -= 5; 
                 else position.x += 5;
 
                 // Stunned for 20 frames, then return to run
-                if (damageCounter >= 20) {
+                if (stunCounter >= 20) {
                     currentState = CharacterState::RUN;
-                    damageCounter = 0;
+                    stunCounter = 0;
                     knockback = {0,0};
                 }
             }
@@ -156,7 +130,7 @@ class Mob : public Character {
                 }
             } else {
                 currentState = CharacterState::HURT;
-                damageCounter = 0;
+                stunCounter = 0;
                 if (animations.count(CharacterState::HURT)) {
                     animations[CharacterState::HURT].Reset();
                 }
@@ -178,5 +152,7 @@ class Mob : public Character {
             Character::Draw();
         }
 
-        virtual void LifeStealRate();
+        virtual float GetDamageRate() { return damageRate; }
+
+        virtual float GetLifeStealRate() { return lifestealRate; }
     };
