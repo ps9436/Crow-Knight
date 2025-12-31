@@ -71,15 +71,12 @@ class Game {
         float timeScale = 1.0f;     // Game speed
 
         // Difficulty variables
-        float goblinSpawnBase = 2.0f;   // Base goblin spawn rate 
-        float goblinFactor = 0.05f;     //  Factor = how quickly the spawn rate increases
-        float orcSpawnBase = 5.0f;
+        float goblinSpawnBase = 0.0f;   // Base goblin spawn rate (lower is faster)
+        float goblinFactor = 0.05f;     // Factor = how quickly the spawn rate increases
+        float orcSpawnBase = 0.0f;
         float orcFactor = 0.05f; 
         float goblinSpawnTimer = 0.0f;
         float orcSpawnTimer = 0.0f;
-
-        
-        float spawnRate = 0.5f;     // Spawn rate
 
         // Spawn a mob at random spot relative to player
         template <typename T>   // Generic allowing spawning for every mob
@@ -171,7 +168,7 @@ class Game {
             if (goblinSpawnRate < 0.1f) goblinSpawnRate = 0.1f; 
 
             if (goblinSpawnTimer > goblinSpawnRate) {
-                SpawnMob<Goblin>(1); // Spawn 1 Goblin
+                // SpawnMob<Goblin>(1); // Spawn 1 Goblin
                 goblinSpawnTimer = 0.0f;
             }
 
@@ -189,7 +186,7 @@ class Game {
                 if (orcSpawnRate < 2.0f) orcSpawnRate = 2.0f;
 
                 if (orcSpawnTimer > orcSpawnRate) {
-                    SpawnMob<Orc>(5); // SPAWN HORDE OF 5
+                    // SpawnMob<Orc>(5); // SPAWN HORDE OF 5
                     orcSpawnTimer = 0.0f;
                 }
             }
@@ -223,7 +220,7 @@ class Game {
                 }
             }
 
-            // Collision and Physics
+            // Collision and Physics (now updated physics for each populated grid)
             Rectangle attackBox = crow.GetAttackBox();  // Calculate hitbox once per frame
             bool isHitboxActive = (attackBox.width > 0);
 
@@ -290,7 +287,7 @@ class Game {
 
                 // Damage and heal logic
                 if (mobs[i]->health < oldMobHP && isHitboxActive && CheckCollisionRecs(attackBox, mobs[i]->GetHitbox())) crow.LifeSteal(mobs[i]->GetLifeStealRate());
-                if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) crow.TakeDamage(mobs[i]->GetDamageRate());
+                if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) crow.TakeDamage(0);
                 if (crow.GetState() == CharacterState::DEATH) {
                     ResetGame();
                     return; // to stop current frame's logic
@@ -334,10 +331,9 @@ class Game {
 
             // Draw UI
             DrawFPS(10, 10);
-            DrawText(TextFormat("Enemies: %i", mobs.size()), 10, 40, 20, DARKGRAY);
 
             // Draw HUD
-            hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent());
+            hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent(), gameTime);
 
             EndDrawing();
         }
@@ -350,12 +346,14 @@ class Game {
             mobs.clear();
 
             // Reset Game State
+            gameTime = 0.0f;
             goblinSpawnTimer = 0.0f;
             orcSpawnTimer = 0.0f;
             hitStopTimer = 0.0f;
             
-            // Reset Camera
+            // Reset Camera and Hud
             camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
+            hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
             
             // Clear Spatial Grid
             spatialGrid.clear();
