@@ -342,7 +342,7 @@ class Game {
             DrawFPS(10, 10);
 
             // Draw HUD
-            hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent(), gameTime);
+            hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent(), crow.GetXPPercent(), crow.GetLevel(), gameTime);
 
             EndDrawing();
         }

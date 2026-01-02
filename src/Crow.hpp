@@ -130,6 +130,7 @@ class Crow : public Character {
             };
         }
 
+        // PUT THESE IN CHARACTER.HPP !!!!!!!!111111111111
         void GainXP(int amount) {
             currentXP += amount;
             if (currentXP >= nextLevelXP) {
@@ -146,7 +147,9 @@ class Crow : public Character {
             // For now, just buff a stat automatically
             attackSpeed -= 1; 
         }
-        
+
         // Getters for HUD
+        float GetLevel() { return level; }
+        
         float GetXPPercent() { return (float)currentXP / nextLevelXP; }
 };

@@ -7,11 +7,15 @@ class HUD {
         Texture2D bloodFill;
         Texture2D lifeStealFrame;
         Texture2D lifeStealFill;
+        Texture2D XPFrame;
+        Texture2D XPFill;
         Vector2 position;
         float scale;
         int screenWidth;
+        int screenHeight;
         int minutes;
         int seconds;
+        int level;  // player level
         Font BoldPixels;
 
     public:
@@ -20,12 +24,15 @@ class HUD {
             bloodFill = LoadTexture("assets/hud/blood-fill.png");
             lifeStealFrame = LoadTexture("assets/hud/lifesteal-border.png");
             lifeStealFill = LoadTexture("assets/hud/lifesteal-fill.png");
+            XPFrame = LoadTexture("assets/hud/level-border.png");
+            XPFill = LoadTexture("assets/hud/level-fill.png");
             BoldPixels = LoadFontEx("assets/BoldPixels.ttf", 16, 0, 0);
             SetTextureFilter(BoldPixels.texture, TEXTURE_FILTER_POINT);
 
             position = { 0.0f, 0.0f };
             scale = 4.0f;
             screenWidth = sWidth;
+            screenHeight = sHeight;
             minutes = 0;
             seconds = 0;
         }
@@ -35,10 +42,12 @@ class HUD {
             UnloadTexture(bloodFill);
             UnloadTexture(lifeStealFrame);
             UnloadTexture(lifeStealFill);
+            UnloadTexture(XPFrame);
+            UnloadTexture(XPFill);
             UnloadFont(BoldPixels);
         }
 
-        void Draw(float bloodPercent, float lifeStolen, float gameTime) {
+        void Draw(float bloodPercent, float lifeStolen, float levelPercent, int level, float gameTime) {
             // Centering (blood = lifesteal)
             float frameCenter = (screenWidth - bloodFrame.width*scale)/2.0f;
             float fillCenter = (screenWidth - bloodFill.width*scale)/2.0f;
@@ -47,7 +56,6 @@ class HUD {
             Rectangle frameSource = { 0.0f, 0.0f, (float)bloodFrame.width, (float)bloodFrame.height };
             Rectangle frameDest = { frameCenter, position.y, (float)bloodFrame.width*scale, (float)bloodFrame.height*scale };
             DrawTexturePro(bloodFrame, frameSource, frameDest, {0.0f, 0.0f}, 0.0f, WHITE);
-
             // Blood fill
             float currentBlood = (bloodFill.width * bloodPercent);    // Only grab what is remaining, not the entire texture
             Rectangle fillSource = { 0.0f, 0.0f, (float)currentBlood, (float)bloodFill.height };
@@ -58,12 +66,36 @@ class HUD {
             Rectangle frameLSSource = { 0.0f, 0.0f, (float)lifeStealFrame.width, (float)lifeStealFrame.height };
             Rectangle frameLSDest = { frameCenter, position.y, (float)lifeStealFrame.width*scale, (float)lifeStealFrame.height*scale };
             DrawTexturePro(lifeStealFrame, frameLSSource, frameLSDest, {0.0f, 0.0f}, 0.0f, WHITE);
-
             // Life stolen
             float currentLifesteal = (bloodFill.width * lifeStolen);  // Life steal texture width
             Rectangle stealSource = { 0.0f, 0.0f, (float)currentLifesteal, (float)lifeStealFill.height };
             Rectangle stealDest = { fillCenter, position.y, (float)currentLifesteal * scale, (float)lifeStealFill.height*scale };
             DrawTexturePro(lifeStealFill, stealSource, stealDest, {0.0f, 0.0f}, 0.0f, WHITE);
+
+            float frameXPCenter = (screenWidth - XPFrame.width*scale)/2.0f;
+            float fillXPCenter = (screenWidth - XPFill.width*scale)/2.0f;
+            // XP frame
+            Rectangle frameXPSource = { 0.0f, 0.0f, (float)XPFrame.width, (float)XPFrame.height };
+            Rectangle frameXPDest = { frameXPCenter, (float)screenHeight - 25, (float)XPFrame.width*scale, (float)XPFrame.height*scale };
+            DrawTexturePro(XPFrame, frameXPSource, frameXPDest, {0.0f, 0.0f}, 0.0f, WHITE);
+            // XP fill
+            float currentXP = (XPFill.width * levelPercent);  // Level texture width
+            Rectangle fillXPSource = { 0.0f, 0.0f, (float)currentXP, (float)XPFill.height };
+            Rectangle fillXPDest = { fillXPCenter, (float)screenHeight - 25, (float)currentXP * scale, (float)XPFill.height*scale };
+            DrawTexturePro(XPFill, fillXPSource, fillXPDest, {0.0f, 0.0f}, 0.0f, WHITE);
+            // Font Lvl
+            float fontSizeLVL = 30.0f;
+            float spacingLVL = 1.0f;
+            float yPosLVL = (float)screenHeight - 55;
+            Color tintLVL = BLACK;
+            Vector2 offsetShadowLVL = { -2, 2 };
+            Color tintShadowLVL = {0, 103, 165, 255};
+            const char* lvl = TextFormat("Level: %i", level);
+            Vector2 lvlSize = MeasureTextEx(BoldPixels, lvl, fontSizeLVL, spacingLVL);
+            Vector2 lvlPos = { (screenWidth - lvlSize.x) / 2, yPosLVL };
+            Vector2 lvlShadowPos = {lvlPos.x + offsetShadowLVL.x, lvlPos.y + offsetShadowLVL.y};
+            // DrawTextEx(BoldPixels, lvl, lvlShadowPos, fontSizeLVL, spacingLVL, tintShadowLVL);   // shadow
+            DrawTextEx(BoldPixels, lvl, lvlPos, fontSizeLVL, spacingLVL, tintLVL);
 
             // Timer
             minutes = (int)gameTime / 60;
