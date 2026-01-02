@@ -77,7 +77,7 @@ class Experience {
 
         void Spawn(Vector2 pos, int amount, XPType xpType) {
             // Spawn multiple orbs depending on amount
-            int orbCount = (amount > 10) ? 5 : 1;
+            int orbCount = (amount > 10) ? 1 : 0;
             int valPerOrb = amount / orbCount;
 
             for (int i = 0; i < orbCount; i++) {
@@ -88,7 +88,7 @@ class Experience {
                 orb.xpValue = valPerOrb;
                 orb.isMagnetized = false;
                 orb.animTimer = GetRandomValue(0, 100) / 10.0f;
-                orb.pickupDelay = 10.5f; // Can't be picked up for 0.5 sec
+                orb.pickupDelay = 5.0f; // Can't be picked up for 0.5 sec
 
                 // Orb drops
                 float angle = GetRandomValue(0, 360) * DEG2RAD;
@@ -113,13 +113,13 @@ class Experience {
                 // Magnetism and Swirling
                 float distSqrd = Vector2DistanceSqr(playerPos, orbs[i].position);
 
-                // Reduce pickup delay
-                if (orbs[i].pickupDelay > 0) orbs[i].pickupDelay -= dt;
-
                 // Trigger magnet
                 if (distSqrd < PICKUP_RADIUS * PICKUP_RADIUS) orbs[i].isMagnetized = true;
 
                 if (orbs[i].isMagnetized) {
+                    // Reduce pickup delay
+                    if (orbs[i].pickupDelay > 0) orbs[i].pickupDelay -= dt;
+
                     Vector2 toPlayer = Vector2Subtract({playerPos.x, playerPos.y - playerZ}, orbs[i].position);    // Distance and direction to player
                     Vector2 dir = Vector2Normalize(toPlayer);   // Direction of player from orb
 
@@ -158,7 +158,7 @@ class Experience {
                     }
 
                     // Only collect if delay is gone AND close enough
-                    if (orbs[i].pickupDelay <= 0 && distSqrd < 1.0f * 1.0f) {
+                    if (orbs[i].pickupDelay <= 0 || distSqrd < 5.0f * 5.0f) {
                         xpGained += orbs[i].xpValue;
                         orbs[i] = orbs.back();
                         orbs.pop_back();

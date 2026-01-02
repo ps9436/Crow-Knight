@@ -15,7 +15,10 @@ class HUD {
         int screenHeight;
         int minutes;
         int seconds;
-        int level;  // player level
+        int currentLevel = 1;
+        float timerLevel = 5.0f;
+        float alphaLevel;
+        float smoothKillCount = 0.0f;
         Font BoldPixels;
 
     public:
@@ -47,7 +50,7 @@ class HUD {
             UnloadFont(BoldPixels);
         }
 
-        void Draw(float bloodPercent, float lifeStolen, float levelPercent, int level, float gameTime) {
+        void Draw(float bloodPercent, float lifeStolen, float levelPercent, int level, int kills, float gameTime) {
             // Centering (blood = lifesteal)
             float frameCenter = (screenWidth - bloodFrame.width*scale)/2.0f;
             float fillCenter = (screenWidth - bloodFill.width*scale)/2.0f;
@@ -83,19 +86,29 @@ class HUD {
             Rectangle fillXPSource = { 0.0f, 0.0f, (float)currentXP, (float)XPFill.height };
             Rectangle fillXPDest = { fillXPCenter, (float)screenHeight - 25, (float)currentXP * scale, (float)XPFill.height*scale };
             DrawTexturePro(XPFill, fillXPSource, fillXPDest, {0.0f, 0.0f}, 0.0f, WHITE);
-            // Font Lvl
-            float fontSizeLVL = 30.0f;
-            float spacingLVL = 1.0f;
-            float yPosLVL = (float)screenHeight - 55;
-            Color tintLVL = BLACK;
-            Vector2 offsetShadowLVL = { -2, 2 };
-            Color tintShadowLVL = {0, 103, 165, 255};
-            const char* lvl = TextFormat("Level: %i", level);
-            Vector2 lvlSize = MeasureTextEx(BoldPixels, lvl, fontSizeLVL, spacingLVL);
-            Vector2 lvlPos = { (screenWidth - lvlSize.x) / 2, yPosLVL };
-            Vector2 lvlShadowPos = {lvlPos.x + offsetShadowLVL.x, lvlPos.y + offsetShadowLVL.y};
-            // DrawTextEx(BoldPixels, lvl, lvlShadowPos, fontSizeLVL, spacingLVL, tintShadowLVL);   // shadow
-            DrawTextEx(BoldPixels, lvl, lvlPos, fontSizeLVL, spacingLVL, tintLVL);
+            if (currentLevel != level) {
+                timerLevel = 5.0f;
+                alphaLevel = 1.0f;
+                currentLevel = level;
+            }
+            if (timerLevel > 0.0f) {
+                // Font Lvl
+                float fontSizeLVL = 30.0f;
+                float spacingLVL = 1.0f;
+                float yPosLVL = (float)screenHeight - 55;
+                if (timerLevel < 1.0f) alphaLevel = timerLevel;
+                else alphaLevel = 1.0f;
+                Vector2 offsetShadowLVL = { -2, 2 };
+                Color tintLVL = Fade({0, 0, 0, 255}, alphaLevel);
+                Color tintShadowLVL = Fade(WHITE, alphaLevel); // Blue: {0, 103, 165, 255}
+                const char* lvl = TextFormat("Level: %i", level);
+                Vector2 lvlSize = MeasureTextEx(BoldPixels, lvl, fontSizeLVL, spacingLVL);
+                Vector2 lvlPos = { (screenWidth - lvlSize.x) / 2, yPosLVL };
+                Vector2 lvlShadowPos = {lvlPos.x + offsetShadowLVL.x, lvlPos.y + offsetShadowLVL.y};
+                DrawTextEx(BoldPixels, lvl, lvlShadowPos, fontSizeLVL, spacingLVL, tintShadowLVL);   // shadow
+                DrawTextEx(BoldPixels, lvl, lvlPos, fontSizeLVL, spacingLVL, tintLVL);
+                timerLevel -= GetFrameTime();
+            }
 
             // Timer
             minutes = (int)gameTime / 60;
@@ -128,7 +141,7 @@ class HUD {
             // : is anchor
             const char* colon = ":";
             Vector2 colonSize = MeasureTextEx(BoldPixels, colon, fontSize, spacing);
-            Vector2 colonPos = { (screenWidth - colonSize.x) / 2, yPos };
+            Vector2 colonPos = { ((screenWidth - colonSize.x) / 2) - bloodFrame.width*scale/4, yPos };
             Vector2 colonShadowPos = {colonPos.x + offsetShadow.x, colonPos.y + offsetShadow.y};
             DrawTextEx(BoldPixels, colon, colonShadowPos, fontSize, spacing, tintShadow);   // shadow
             DrawTextEx(BoldPixels, colon, colonPos, fontSize, spacing, tint);
@@ -146,5 +159,26 @@ class HUD {
             Vector2 secShadowPos = {secPos.x + offsetShadow.x, secPos.y + offsetShadow.y};
             DrawTextEx(BoldPixels, secText, secShadowPos, fontSize, spacing, tintShadow);
             DrawTextEx(BoldPixels, secText, secPos, fontSize, spacing, tint);
+
+            // Draw Kills
+            if (smoothKillCount < kills) {
+                // Calculate difference
+                float diff = (float)kills - smoothKillCount;
+                
+                // The speed depends on the difference
+                // 10 make it to where bigger difference = faster counting
+                // 5 smooths out counter when diff is very low
+                float speed = (diff * 10.0f) + 5.0f;
+
+                smoothKillCount += speed * GetFrameTime();
+
+                // Snap to the final number if close
+                if (abs((float)kills - smoothKillCount) < 0.5f) smoothKillCount = (float)kills;
+            }
+
+            // Draw (Cast float to int for the text)
+            const char* killsText = TextFormat("%02i", (int)smoothKillCount);
+            DrawTextEx(BoldPixels, killsText, {((screenWidth - colonSize.x) / 2) + bloodFrame.width*scale/4, yPos}, fontSize, spacing, tint);
+            
         }
 };

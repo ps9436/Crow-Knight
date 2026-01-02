@@ -21,6 +21,7 @@ class Crow : public Character {
         float bloodDrainRate = 0.0f;
         float lifeSteal = 0.5f;     // Rate/amount of lifesteal
         float lifeStolen = 0.0f;
+        int killCount;
 
         // Dash logic
         float dashDuration = 0.15f; // How fast dash is executed
@@ -131,6 +132,8 @@ class Crow : public Character {
         }
 
         // PUT THESE IN CHARACTER.HPP !!!!!!!!111111111111
+        void KillPlusOne() { killCount++; }
+
         void GainXP(int amount) {
             currentXP += amount;
             if (currentXP >= nextLevelXP) {
@@ -149,6 +152,8 @@ class Crow : public Character {
         }
 
         // Getters for HUD
+        int GetKillCount() { return killCount; }
+
         float GetLevel() { return level; }
         
         float GetXPPercent() { return (float)currentXP / nextLevelXP; }

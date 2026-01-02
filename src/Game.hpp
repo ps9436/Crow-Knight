@@ -291,6 +291,7 @@ class Game {
 
                 // Damage and heal logic
                 if (mobs[i]->health < oldMobHP && isHitboxActive && CheckCollisionRecs(attackBox, mobs[i]->GetHitbox())) crow.LifeSteal(mobs[i]->GetLifeStealRate());
+                if (mobs[i]->health <= 0) crow.KillPlusOne();
                 if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) crow.TakeDamage(0);
                 if (crow.GetState() == CharacterState::DEATH) {
                     ResetGame();
@@ -342,7 +343,7 @@ class Game {
             DrawFPS(10, 10);
 
             // Draw HUD
-            hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent(), crow.GetXPPercent(), crow.GetLevel(), gameTime);
+            hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent(), crow.GetXPPercent(), crow.GetLevel(), crow.GetKillCount(), gameTime);
 
             EndDrawing();
         }
