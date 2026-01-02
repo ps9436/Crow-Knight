@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include "Character.hpp"
+#include "Experience.hpp"
 
 class Mob : public Character {
     public:
@@ -155,4 +156,6 @@ class Mob : public Character {
         virtual float GetDamageRate() { return damageRate; }
 
         virtual float GetLifeStealRate() { return lifestealRate; }
+
+        virtual XPType GetXPType() { return XPType::NONE; }
     };

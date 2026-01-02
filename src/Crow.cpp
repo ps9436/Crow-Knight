@@ -309,7 +309,7 @@ void Crow::Dash(Input input, float dt) {
         // Interpolate position
         float progress = EaseInOutQuad(time);
 
-        // Lerp formula:postion = Start + (End - Start) * Progress
+        // Lerp formula: postion = Start + (End - Start) * Progress
         position.x = dashStartPos.x + (dashTargetPos.x - dashStartPos.x) * progress;
         position.y = dashStartPos.y + (dashTargetPos.y - dashStartPos.y) * progress;
     }

@@ -35,7 +35,7 @@ struct Animation {
         }
     }
 
-    void Draw(Vector2 position, bool flipH = false) {
+    void Draw(Vector2 position, bool flipH = false, Color tint = WHITE) {
         float width = (float)texture.width / totalFrames;
         float height = (float)texture.height;
 
@@ -48,7 +48,25 @@ struct Animation {
         Rectangle dest = { position.x, position.y, width * scale, height * scale};
 
         // Instead of {0,0} to {dest.width/2,dest.height/2} for center sprite drawing
-        DrawTexturePro(texture, source, dest, {dest.width/2,dest.height/2}, 0.0f, WHITE);      
+        DrawTexturePro(texture, source, dest, {dest.width/2,dest.height/2}, 0.0f, tint);      
+    }
+
+    void DrawScaled(Vector2 position, float scaleMult, bool flipH = false, Color tint = WHITE) {
+        float width = (float)texture.width / totalFrames;
+        float height = (float)texture.height;
+
+        Rectangle source = {
+            currentFrame * width,
+            0,
+            flipH ? -width : width,
+            height
+        };
+        
+        // Multiply the base scale by the specific scale multiplier
+        float finalScale = scale * scaleMult;
+
+        Rectangle dest = { position.x, position.y, width * finalScale, height * finalScale};
+        DrawTexturePro(texture, source, dest, {dest.width/2, dest.height/2}, 0.0f, tint);      
     }
 
     // For character state switching

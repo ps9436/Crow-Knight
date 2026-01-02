@@ -63,7 +63,7 @@ void Character::Draw() {
     if (animations.count(currentState) > 0) {
         if (currentState != CharacterState::DEATH) DrawShadow();
         Vector2 drawPos = { position.x, position.y - z};
-        animations[currentState].Draw(drawPos, faceRight);
+        animations[currentState].Draw(drawPos, faceRight, tint);
     }
 }
 

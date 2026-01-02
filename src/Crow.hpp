@@ -10,12 +10,15 @@ class Crow : public Character {
         CrowForm currentForm = CrowForm::UNDEAD;
 
         // Crow Stats
+        int level = 1;
+        int currentXP = 0;
+        int nextLevelXP = 100;
         int attackSpeed = 3;       // Lower is faster 3 -> 0
-        float jumpPower = 500.0f;
-        float speed = 300.0f;
+        float jumpPower = 800.0f;
+        float speed = 350.0f;
         float BLOOD = 100.0f;
         float currentBlood = 100.0f;
-        float bloodDrainRate = 5.0f;
+        float bloodDrainRate = 0.0f;
         float lifeSteal = 0.5f;     // Rate/amount of lifesteal
         float lifeStolen = 0.0f;
 
@@ -25,6 +28,7 @@ class Crow : public Character {
         float dashCost = 0.0f;
         Vector2 dashStartPos;
         Vector2 dashTargetPos;
+        Vector2 dashEffectPos;
 
         // Textures
         Texture2D idleUNDEAD; Texture2D runUNDEAD; Texture2D jumpUNDEAD;
@@ -125,4 +129,24 @@ class Crow : public Character {
                 h * size
             };
         }
+
+        void GainXP(int amount) {
+            currentXP += amount;
+            if (currentXP >= nextLevelXP) {
+                LevelUp();
+            }
+        }
+
+        void LevelUp() {
+            level++;
+            currentXP = 0; // Or carry over overflow
+            nextLevelXP *= 1.5f; // Harder to get next level
+            
+            // HERE: You will trigger the "Level Up Screen"
+            // For now, just buff a stat automatically
+            attackSpeed -= 1; 
+        }
+        
+        // Getters for HUD
+        float GetXPPercent() { return (float)currentXP / nextLevelXP; }
 };

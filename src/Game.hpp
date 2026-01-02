@@ -26,9 +26,11 @@ class Game {
         HUD hud;
 
         // Entities
-        std::vector<Character*> renderQueue;
         Crow crow;
+        Experience xp;
+        std::vector<Character*> renderQueue;
         std::vector<std::unique_ptr<Mob>> mobs; // Smart Pointer replaces raw pointers (no manual deleting)
+
 
         // Spatial grid
         // Grid maps a cell ID to a list of character (mob) indices
@@ -141,6 +143,7 @@ class Game {
             renderQueue.reserve(mobs.size() + 1);
 
             // Setup systems
+            xp.Init();
             camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
             hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
         }
@@ -168,12 +171,12 @@ class Game {
             if (goblinSpawnRate < 0.1f) goblinSpawnRate = 0.1f; 
 
             if (goblinSpawnTimer > goblinSpawnRate) {
-                // SpawnMob<Goblin>(1); // Spawn 1 Goblin
+                SpawnMob<Goblin>(1); // Spawn 1 Goblin
                 goblinSpawnTimer = 0.0f;
             }
 
             // Orc Logic (Starts at Minute 3)
-            float phaseTwoTime = 10.0f;
+            float phaseTwoTime = 100.0f;
 
             if (gameTime > phaseTwoTime) {
                 // Calculate how long we've been in Phase 2
@@ -186,7 +189,7 @@ class Game {
                 if (orcSpawnRate < 2.0f) orcSpawnRate = 2.0f;
 
                 if (orcSpawnTimer > orcSpawnRate) {
-                    // SpawnMob<Orc>(5); // SPAWN HORDE OF 5
+                    SpawnMob<Orc>(5); // SPAWN HORDE OF 5
                     orcSpawnTimer = 0.0f;
                 }
             }
@@ -203,6 +206,7 @@ class Game {
                 if (mobs[i]->GetState() == CharacterState::DEATH) {
                     // Remove gone mobs
                     if (mobs[i]->IsDeadAndGone()) {
+                        xp.Spawn(mobs[i]->GetPosition(), 11, mobs[i]->GetXPType());
                         mobs[i] = std::move(mobs.back());   // Don't copy address, actually move the pointer
                         mobs.pop_back();
                         i--;
@@ -282,7 +286,7 @@ class Game {
                 }
                 int oldMobHP = mobs[i]->health;  // For crow healing after update
 
-                // Pass in calculated force
+                // Pass in calculated forcel
                 mobs[i]->Update(crow.GetPosition(), isHitboxActive, attackBox, mobs[i]->pushForce, &hitStopTimer, dt);
 
                 // Damage and heal logic
@@ -293,6 +297,8 @@ class Game {
                     return; // to stop current frame's logic
                 }
             }
+            int xpGained = xp.Update(crow.GetPosition(), crow.GetZPosition(), dt); 
+            if (xpGained > 0) crow.GainXP(xpGained);
         }
 
         void Draw() {
@@ -319,6 +325,9 @@ class Game {
             BeginMode2D(camera.raylibCam);
                 DrawDebugGrid(5000, 100);
 
+                // Draw orbs
+                xp.Draw();
+                
                 // Draw characters
                 for (Character* character : renderQueue) character->Draw();
 
@@ -344,6 +353,7 @@ class Game {
 
             // Clear enemies
             mobs.clear();
+            xp.Reset();
 
             // Reset Game State
             gameTime = 0.0f;

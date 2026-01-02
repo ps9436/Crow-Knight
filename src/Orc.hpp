@@ -63,4 +63,8 @@ class Orc : public Mob {
             float offY = 11.0f;
             return { position.x - (offX * size), position.y - (offY * size), 16 * size, 21 * size };
         }
+
+        XPType GetXPType() override {
+            return XPType::SMALL;
+        }
 };

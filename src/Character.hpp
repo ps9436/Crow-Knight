@@ -1,7 +1,7 @@
 #pragma once
 #include <raylib.h>
-#include "Animation.hpp"
 #include <map>
+#include "Animation.hpp"
 
 // Generic states shared by all playable characters
 enum class CharacterState {
@@ -26,7 +26,7 @@ class Character {
         float gravity = 2000.0f;
         bool faceRight = true;     // Should character face right (y/n)?
         bool onGround = true;
-        Vector2 dashEffectPos;
+        Color tint = WHITE;
         Texture2D shadow;
 
         std::map<CharacterState, Animation> animations;
@@ -71,9 +71,12 @@ class Character {
             return currentState == CharacterState::DEATH;
         }
         
-        // Get character center
         Vector2 GetPosition() {
             return { position.x, position.y}; 
+        }
+
+        float GetZPosition() {
+            return z;
         }
 
         // Get character facing (R = true/L = flase)
