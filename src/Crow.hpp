@@ -14,7 +14,7 @@ class Crow : public Character {
         // Crow Stats
         int level = 1;
         float currentXP = 0;
-        float nextLevelXP = 10;
+        float nextLevelXP = 1;
         int attackSpeed = 3;       // Lower is faster 3 -> 0
         float jumpPower = 500.0f;
         float speed = 300.0f;

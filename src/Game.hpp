@@ -148,7 +148,7 @@ class Game {
             xp.Init();
             camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
             hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
-            levelUpMenu.Init();
+            levelUpMenu.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
         }
 
         void Update() {
