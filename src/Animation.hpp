@@ -7,11 +7,11 @@ struct Animation {
     int currentFrame = 0;       // The current frame on the sprite
     float frameSpeed;           // FPS
     float timer = 0.0f;         // Count up difference in time (dt) until next frame
-    int scale = 1;              // Scale of texture
+    float scale = 1.0f;         // Scale of texture
     bool loop = true;           // Should the animation loop or not
 
     // Initialize the sprite (contructor)
-    void Init(Texture2D tex, int frames, float speed, int spriteScale = 1, bool shouldLoop = true) {
+    void Init(Texture2D tex, int frames, float speed, float spriteScale = 1.0f, bool shouldLoop = true) {
         texture = tex;
         totalFrames = frames;
         frameSpeed = speed;

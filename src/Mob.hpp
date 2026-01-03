@@ -157,5 +157,5 @@ class Mob : public Character {
 
         virtual float GetLifeStealRate() { return lifestealRate; }
 
-        virtual XPType GetXPType() { return XPType::NONE; }
+        virtual int GetXPValue() { return 1; }
     };

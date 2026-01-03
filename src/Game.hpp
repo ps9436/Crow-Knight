@@ -13,6 +13,7 @@
 #include "Input.hpp"
 #include "CameraManager.hpp"
 #include "HUD.hpp"
+#include "LevelUpMenu.hpp"
 
 class Game {
     private:
@@ -24,13 +25,13 @@ class Game {
         CameraManager camera;
         Input input;
         HUD hud;
+        LevelUpMenu levelUpMenu;
 
         // Entities
         Crow crow;
         Experience xp;
         std::vector<Character*> renderQueue;
         std::vector<std::unique_ptr<Mob>> mobs; // Smart Pointer replaces raw pointers (no manual deleting)
-
 
         // Spatial grid
         // Grid maps a cell ID to a list of character (mob) indices
@@ -71,11 +72,12 @@ class Game {
         float gameTime = 0.0f;
         float hitStopTimer = 0.0f;  // Freeze on hits
         float timeScale = 1.0f;     // Game speed
+        bool isLevelingUp = false;
 
         // Difficulty variables
-        float goblinSpawnBase = 0.0f;   // Base goblin spawn rate (lower is faster)
+        float goblinSpawnBase = 2.0f;   // Base goblin spawn rate (lower is faster)
         float goblinFactor = 0.05f;     // Factor = how quickly the spawn rate increases
-        float orcSpawnBase = 0.0f;
+        float orcSpawnBase = 5.0f;
         float orcFactor = 0.05f; 
         float goblinSpawnTimer = 0.0f;
         float orcSpawnTimer = 0.0f;
@@ -146,9 +148,18 @@ class Game {
             xp.Init();
             camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
             hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+            levelUpMenu.Init();
         }
 
         void Update() {
+            // if (crow.LeveledUp()) {
+            //     isLevelingUp = true;
+            //     levelUpMenu.GenerateOptions(SCREEN_WIDTH, SCREEN_HEIGHT);
+            //     crow.ClearLevelUpFlag();
+            //     levelUpMenu.Update(crow);
+            //     return; // Stop update
+            // }
+
             // Handle Hit Stop Timer
             if (hitStopTimer > 0.0f) {
                 hitStopTimer -= GetFrameTime(); // Use real time to count down
@@ -175,7 +186,7 @@ class Game {
                 goblinSpawnTimer = 0.0f;
             }
 
-            // Orc Logic (Starts at Minute 3)
+            // Orc Logic
             float phaseTwoTime = 100.0f;
 
             if (gameTime > phaseTwoTime) {
@@ -206,7 +217,7 @@ class Game {
                 if (mobs[i]->GetState() == CharacterState::DEATH) {
                     // Remove gone mobs
                     if (mobs[i]->IsDeadAndGone()) {
-                        xp.Spawn(mobs[i]->GetPosition(), 11, mobs[i]->GetXPType());
+                        xp.SpawnOrb(mobs[i]->GetPosition(), mobs[i]->GetXPValue());
                         mobs[i] = std::move(mobs.back());   // Don't copy address, actually move the pointer
                         mobs.pop_back();
                         i--;
@@ -292,7 +303,7 @@ class Game {
                 // Damage and heal logic
                 if (mobs[i]->health < oldMobHP && isHitboxActive && CheckCollisionRecs(attackBox, mobs[i]->GetHitbox())) crow.LifeSteal(mobs[i]->GetLifeStealRate());
                 if (mobs[i]->health <= 0) crow.KillPlusOne();
-                if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) crow.TakeDamage(0);
+                if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) crow.TakeDamage(mobs[i]->GetDamageRate());
                 if (crow.GetState() == CharacterState::DEATH) {
                     ResetGame();
                     return; // to stop current frame's logic
@@ -344,6 +355,8 @@ class Game {
 
             // Draw HUD
             hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent(), crow.GetXPPercent(), crow.GetLevel(), crow.GetKillCount(), gameTime);
+
+            if (isLevelingUp) levelUpMenu.Draw();
 
             EndDrawing();
         }

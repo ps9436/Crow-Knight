@@ -50,6 +50,40 @@ class Experience {
         const float SWIRL_FORCE = 1000.0f;
         const float PICKUP_RADIUS = 200.0f;
 
+        int GetOrbValue(XPType type) {
+            switch (type) {
+                case XPType::SMALL: return 1;
+                case XPType::MEDIUM: return 5;
+                case XPType::LARGE: return 10;
+                default: return 0;
+            }
+        }
+
+        void SpawnBatch(Vector2 pos, int orbCount, XPType xpType) {
+            if (orbCount <= 0) return;
+
+            int valPerOrb = GetOrbValue(xpType);
+
+            for (int i = 0; i < orbCount; i++) {
+                XPOrb orb;
+                orb.type = xpType;
+                orb.position = pos;
+                orb.z = 10.0f;
+                orb.xpValue = valPerOrb;
+                orb.isMagnetized = false;
+                orb.animTimer = GetRandomValue(0, 100) / 10.0f;
+                orb.pickupDelay = 5.0f; // Can't actually be collected for 5 sec
+
+                // Orb drops
+                float angle = GetRandomValue(0, 360) * DEG2RAD;
+                float speed = GetRandomValue(100, 300);
+                orb.velocity = { cosf(angle) * speed, sinf(angle) * speed};
+                orb.zVelocity = GetRandomValue(5, 20);;
+
+                orbs.push_back(orb);
+            }
+        }
+
     public:
         static constexpr Color PERSIAN_BLUE = { 28, 57, 187, 255 };
 
@@ -75,29 +109,25 @@ class Experience {
             UnloadTexture(shadowOrb);
         }
 
-        void Spawn(Vector2 pos, int amount, XPType xpType) {
-            // Spawn multiple orbs depending on amount
-            int orbCount = (amount > 10) ? 1 : 0;
-            int valPerOrb = amount / orbCount;
+        void SpawnOrb(Vector2 pos, int totalXP) {
+            // 50% Drop chance
+            if (GetRandomValue(0, 100) < 50) return;
 
-            for (int i = 0; i < orbCount; i++) {
-                XPOrb orb;
-                orb.type = xpType;
-                orb.position = pos;
-                orb.z = 10.0f;
-                orb.xpValue = valPerOrb;
-                orb.isMagnetized = false;
-                orb.animTimer = GetRandomValue(0, 100) / 10.0f;
-                orb.pickupDelay = 5.0f; // Can't be picked up for 0.5 sec
+            int remaining = totalXP;
+            // Large orbs (10 XP)
+            int numLarge = remaining / 10;
+            remaining %= 10;    // Keep remainder
 
-                // Orb drops
-                float angle = GetRandomValue(0, 360) * DEG2RAD;
-                float speed = GetRandomValue(100, 300);
-                orb.velocity = { cosf(angle) * speed, sinf(angle) * speed};
-                orb.zVelocity = GetRandomValue(5, 20);;
+            // Medium orbs (5 XP)
+            int numMedium = remaining / 5;
+            remaining %= 5;
 
-                orbs.push_back(orb);
-            }
+            // Small orbs (1 XP)
+            int numSmall = remaining;
+
+            SpawnBatch(pos, numLarge, XPType::LARGE);
+            SpawnBatch(pos, numMedium, XPType::MEDIUM);
+            SpawnBatch(pos, numSmall, XPType::SMALL);
         }
 
         int Update(Vector2 playerPos, float playerZ, float dt) {

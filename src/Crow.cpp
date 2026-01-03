@@ -186,7 +186,6 @@ void Crow::Update(Input input, float dt) {
 }
 
 void Crow::Draw() {
-    DrawText(TextFormat("Frame: %i", GetCurrentFrame()), position.x, position.y - 50, 20, DARKGRAY);
     if (!dashAnim.IsFinished()) {
         dashAnim.Draw(dashEffectPos);
     }

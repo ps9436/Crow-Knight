@@ -101,7 +101,7 @@ class HUD {
                 Vector2 offsetShadowLVL = { -2, 2 };
                 Color tintLVL = Fade({0, 0, 0, 255}, alphaLevel);
                 Color tintShadowLVL = Fade(WHITE, alphaLevel); // Blue: {0, 103, 165, 255}
-                const char* lvl = TextFormat("Level: %i", level);
+                const char* lvl = TextFormat("Level %i", level);
                 Vector2 lvlSize = MeasureTextEx(BoldPixels, lvl, fontSizeLVL, spacingLVL);
                 Vector2 lvlPos = { (screenWidth - lvlSize.x) / 2, yPosLVL };
                 Vector2 lvlShadowPos = {lvlPos.x + offsetShadowLVL.x, lvlPos.y + offsetShadowLVL.y};
@@ -161,14 +161,15 @@ class HUD {
             DrawTextEx(BoldPixels, secText, secPos, fontSize, spacing, tint);
 
             // Draw Kills
+            if (kills == 0) smoothKillCount = 0;
             if (smoothKillCount < kills) {
                 // Calculate difference
                 float diff = (float)kills - smoothKillCount;
                 
                 // The speed depends on the difference
-                // 10 make it to where bigger difference = faster counting
-                // 5 smooths out counter when diff is very low
-                float speed = (diff * 10.0f) + 5.0f;
+                // 5 make it to where bigger difference = faster counting
+                // 15 smooths out counter when diff is very low
+                float speed = (diff * 5.0f) + 15.0f;
 
                 smoothKillCount += speed * GetFrameTime();
 
@@ -177,8 +178,9 @@ class HUD {
             }
 
             // Draw (Cast float to int for the text)
-            const char* killsText = TextFormat("%02i", (int)smoothKillCount);
-            DrawTextEx(BoldPixels, killsText, {((screenWidth - colonSize.x) / 2) + bloodFrame.width*scale/4, yPos}, fontSize, spacing, tint);
+            const char* killsText = TextFormat("%04i", (int)smoothKillCount);
+            Vector2 killsSize = MeasureTextEx(BoldPixels, killsText, fontSize, spacing);
+            DrawTextEx(BoldPixels, killsText, {((screenWidth - killsSize.x) / 2) + bloodFrame.width*scale/4, yPos}, fontSize, spacing, tint);
             
         }
 };

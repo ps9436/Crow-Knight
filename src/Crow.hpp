@@ -7,21 +7,25 @@ enum class CrowForm { UNDEAD, ALIVE };
 
 class Crow : public Character {
     private:
+        friend class LevelUpMenu;
+
         CrowForm currentForm = CrowForm::UNDEAD;
 
         // Crow Stats
         int level = 1;
         int currentXP = 0;
-        int nextLevelXP = 100;
+        int nextLevelXP = 10;
         int attackSpeed = 3;       // Lower is faster 3 -> 0
-        float jumpPower = 800.0f;
-        float speed = 350.0f;
+        float jumpPower = 500.0f;
+        float speed = 300.0f;
         float BLOOD = 100.0f;
         float currentBlood = 100.0f;
-        float bloodDrainRate = 0.0f;
+        float bloodDrainRate = 5.0f;
         float lifeSteal = 0.5f;     // Rate/amount of lifesteal
         float lifeStolen = 0.0f;
+        
         int killCount;
+        bool leveledUp;
 
         // Dash logic
         float dashDuration = 0.15f; // How fast dash is executed
@@ -69,11 +73,17 @@ class Crow : public Character {
         void Reset(Vector2 startPos) {
             position = startPos;
             currentBlood = BLOOD;
+            lifeStolen = 0.0f;
+            level = 1;
+            currentXP = 0;
+            nextLevelXP = 100;
+            killCount = 0;
             currentForm = CrowForm::UNDEAD;
             animations = undeadAnims;
             currentState = CharacterState::IDLE;
             if (animations.count(currentState) > 0) animations[currentState].Reset();
             faceRight = false;
+            leveledUp = false;
             
             // Reset Physics
             velocity = { 0, 0 };
@@ -136,20 +146,23 @@ class Crow : public Character {
 
         void GainXP(int amount) {
             currentXP += amount;
-            if (currentXP >= nextLevelXP) {
+            while (currentXP >= nextLevelXP) {
                 LevelUp();
             }
         }
 
         void LevelUp() {
             level++;
-            currentXP = 0; // Or carry over overflow
+            currentXP -= nextLevelXP; // Keep overflow XP
             nextLevelXP *= 1.5f; // Harder to get next level
             
-            // HERE: You will trigger the "Level Up Screen"
-            // For now, just buff a stat automatically
-            attackSpeed -= 1; 
+            leveledUp = true;
         }
+
+        // Getters for Game
+        bool LeveledUp() { return leveledUp; }
+
+        void ClearLevelUpFlag() { leveledUp = false; }
 
         // Getters for HUD
         int GetKillCount() { return killCount; }

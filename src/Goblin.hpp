@@ -64,7 +64,7 @@ class Goblin : public Mob {
             return { position.x - (offX * size), position.y - (offY * size), 16 * size, 21 * size };
         }
 
-        XPType GetXPType() override {
-            return XPType::SMALL;
+        int GetXPValue() override {
+            return 1;
         }
 };
