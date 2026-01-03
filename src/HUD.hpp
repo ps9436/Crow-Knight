@@ -10,7 +10,6 @@ class HUD {
         Texture2D XPFrame;
         Texture2D XPFill;
         Vector2 position;
-        float scale;
         int screenWidth;
         int screenHeight;
         int minutes;
@@ -18,6 +17,7 @@ class HUD {
         int currentLevel = 1;
         float timerLevel = 5.0f;
         float alphaLevel;
+        float scale;
         float smoothKillCount = 0.0f;
         Font BoldPixels;
 
@@ -75,16 +75,15 @@ class HUD {
             Rectangle stealDest = { fillCenter, position.y, (float)currentLifesteal * scale, (float)lifeStealFill.height*scale };
             DrawTexturePro(lifeStealFill, stealSource, stealDest, {0.0f, 0.0f}, 0.0f, WHITE);
 
-            float frameXPCenter = (screenWidth - XPFrame.width*scale)/2.0f;
-            float fillXPCenter = (screenWidth - XPFill.width*scale)/2.0f;
+            float XPCenter = (screenWidth - XPFrame.width*scale)/2.0f;
             // XP frame
             Rectangle frameXPSource = { 0.0f, 0.0f, (float)XPFrame.width, (float)XPFrame.height };
-            Rectangle frameXPDest = { frameXPCenter, (float)screenHeight - 25, (float)XPFrame.width*scale, (float)XPFrame.height*scale };
+            Rectangle frameXPDest = { XPCenter, (float)screenHeight - 25, (float)XPFrame.width*scale, (float)XPFrame.height*scale };
             DrawTexturePro(XPFrame, frameXPSource, frameXPDest, {0.0f, 0.0f}, 0.0f, WHITE);
             // XP fill
-            float currentXP = (XPFill.width * levelPercent);  // Level texture width
+            float currentXP = (float)(XPFill.width * levelPercent);  // Level texture width
             Rectangle fillXPSource = { 0.0f, 0.0f, (float)currentXP, (float)XPFill.height };
-            Rectangle fillXPDest = { fillXPCenter, (float)screenHeight - 25, (float)currentXP * scale, (float)XPFill.height*scale };
+            Rectangle fillXPDest = { XPCenter, (float)screenHeight - 25, (float)(currentXP * scale), (float)XPFill.height*scale };
             DrawTexturePro(XPFill, fillXPSource, fillXPDest, {0.0f, 0.0f}, 0.0f, WHITE);
             if (currentLevel != level) {
                 timerLevel = 5.0f;

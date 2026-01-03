@@ -13,8 +13,8 @@ class Crow : public Character {
 
         // Crow Stats
         int level = 1;
-        int currentXP = 0;
-        int nextLevelXP = 10;
+        float currentXP = 0;
+        float nextLevelXP = 10;
         int attackSpeed = 3;       // Lower is faster 3 -> 0
         float jumpPower = 500.0f;
         float speed = 300.0f;
@@ -71,21 +71,34 @@ class Crow : public Character {
         bool IsAlive() const;
 
         void Reset(Vector2 startPos) {
-            position = startPos;
-            currentBlood = BLOOD;
-            lifeStolen = 0.0f;
+            // Stats reset
             level = 1;
             currentXP = 0;
-            nextLevelXP = 100;
+            nextLevelXP = 10;
+            leveledUp = false;
+            attackSpeed = 3;
+            jumpPower = 500.0f;
+            speed = 300.0f;
+            BLOOD = 100.0f;
+            currentBlood = 100.0f;
+            bloodDrainRate = 5.0f;
+            lifeSteal = 0.5f;
+            lifeStolen = 0.0f;
             killCount = 0;
+
+            // Dash reset
+            dashDuration = 0.15f;
+            dashTimer = 0.0f;
+            dashCost = 0.0f;
+
+            // Form reset
             currentForm = CrowForm::UNDEAD;
             animations = undeadAnims;
             currentState = CharacterState::IDLE;
             if (animations.count(currentState) > 0) animations[currentState].Reset();
             faceRight = false;
-            leveledUp = false;
             
-            // Reset Physics
+            // Physics reset
             velocity = { 0, 0 };
             z = 0.0f;
             zVelocity = 0.0f;
@@ -144,7 +157,7 @@ class Crow : public Character {
         // PUT THESE IN CHARACTER.HPP !!!!!!!!111111111111
         void KillPlusOne() { killCount++; }
 
-        void GainXP(int amount) {
+        void GainXP(float amount) {
             currentXP += amount;
             while (currentXP >= nextLevelXP) {
                 LevelUp();
@@ -154,7 +167,7 @@ class Crow : public Character {
         void LevelUp() {
             level++;
             currentXP -= nextLevelXP; // Keep overflow XP
-            nextLevelXP *= 1.5f; // Harder to get next level
+            nextLevelXP *= 3.0f; // Harder to get next level
             
             leveledUp = true;
         }
@@ -167,7 +180,7 @@ class Crow : public Character {
         // Getters for HUD
         int GetKillCount() { return killCount; }
 
-        float GetLevel() { return level; }
+        int GetLevel() { return level; }
         
-        float GetXPPercent() { return (float)currentXP / nextLevelXP; }
+        float GetXPPercent() { return currentXP / nextLevelXP; }
 };

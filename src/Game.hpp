@@ -152,13 +152,21 @@ class Game {
         }
 
         void Update() {
-            // if (crow.LeveledUp()) {
-            //     isLevelingUp = true;
-            //     levelUpMenu.GenerateOptions(SCREEN_WIDTH, SCREEN_HEIGHT);
-            //     crow.ClearLevelUpFlag();
-            //     levelUpMenu.Update(crow);
-            //     return; // Stop update
-            // }
+            if (crow.LeveledUp()) {
+                isLevelingUp = true;
+                // Generate level up cards
+                levelUpMenu.GenerateOptions(SCREEN_WIDTH, SCREEN_HEIGHT); 
+                crow.ClearLevelUpFlag(); 
+                return;
+            }
+            if (isLevelingUp) {
+                // Update the menu logic
+                if (levelUpMenu.Update(crow)) {
+                    // Update returns true when card is clicked
+                    isLevelingUp = false; 
+                }
+                return;
+            }
 
             // Handle Hit Stop Timer
             if (hitStopTimer > 0.0f) {
@@ -309,7 +317,7 @@ class Game {
                     return; // to stop current frame's logic
                 }
             }
-            int xpGained = xp.Update(crow.GetPosition(), crow.GetZPosition(), dt); 
+            float xpGained = xp.Update(crow.GetPosition(), crow.GetZPosition(), dt); 
             if (xpGained > 0) crow.GainXP(xpGained);
         }
 
@@ -356,7 +364,9 @@ class Game {
             // Draw HUD
             hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent(), crow.GetXPPercent(), crow.GetLevel(), crow.GetKillCount(), gameTime);
 
-            if (isLevelingUp) levelUpMenu.Draw();
+            if (isLevelingUp) {
+                levelUpMenu.Draw();
+            }
 
             EndDrawing();
         }

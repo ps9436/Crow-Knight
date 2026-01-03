@@ -33,7 +33,7 @@ class LevelUpMenu {
 
     public:
         void Init() {
-            upgradePool.clear();
+            choosingCards.clear();
 
             // All Upgrades
             // Speed Up
@@ -42,7 +42,7 @@ class LevelUpMenu {
             card1.description = "Increase Speed\nby 20%.";
             card1.type = UpgradeType::UTILITY;
             card1.applyEffect = [](Crow& c) { c.speed *= 1.2f; }; // Direct lambda access
-            choosingCards.push_back(card1);
+            upgradePool.push_back(card1);
 
             // Dash Up
             UpgradeCard card2;
@@ -50,7 +50,7 @@ class LevelUpMenu {
             card2.description = "Increase Dash Speed\nby 20%.";
             card2.type = UpgradeType::UTILITY;
             card2.applyEffect = [](Crow& c) { c.dashDuration *= 0.8f; };
-            choosingCards.push_back(card2);
+            upgradePool.push_back(card2);
 
             // Blood Up
             UpgradeCard card3;
@@ -58,7 +58,15 @@ class LevelUpMenu {
             card3.description = "Increase Health\nby 20%.";
             card3.type = UpgradeType::OFFENSE;
             card3.applyEffect = [](Crow& c) { c.BLOOD *= 1.2f; };
-            choosingCards.push_back(card3);
+            upgradePool.push_back(card3);
+
+            // Attack Speed
+            UpgradeCard card4;
+            card4.title = "Attack Speed Up";
+            card4.description = "Increase Attack Speed\nby 33%.";
+            card4.type = UpgradeType::OFFENSE;
+            card4.applyEffect = [](Crow& c) { c.attackSpeed -= 1; };
+            upgradePool.push_back(card4);
         }
 
         void GenerateOptions(int screenWidth, int screenHeight) {

@@ -65,6 +65,6 @@ class Orc : public Mob {
         }
 
         int GetXPValue() override {
-            return 6;
+            return 1;
         }
 };

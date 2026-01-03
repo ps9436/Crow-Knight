@@ -187,7 +187,7 @@ class Experience {
                         orbs[i].zVelocity *= FRICTION;  // Eventuall get to target
                     }
 
-                    // Only collect if delay is gone AND close enough
+                    // Collect if delay is gone or close enough
                     if (orbs[i].pickupDelay <= 0 || distSqrd < 5.0f * 5.0f) {
                         xpGained += orbs[i].xpValue;
                         orbs[i] = orbs.back();
