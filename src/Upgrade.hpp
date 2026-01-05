@@ -17,14 +17,14 @@ struct UpgradeCard {
     std::string title;
     std::string description;
     UpgradeType type;
-    int weight; // Higher weight = more common
+    int weight;     // Higher weight = more common
     Rectangle rect;
     bool isHovered;
 
     std::function<void(Crow&)> applyEffect;
 };
 
-class LevelUpMenu {
+class Upgrade {
     private:
         Font BoldPixels;
         int screenWidth;
@@ -67,9 +67,9 @@ class LevelUpMenu {
             // Speed Up (Common)
             UpgradeCard card1;
             card1.title = "Speed Up";
-            card1.description = "Increase Speed\nby 20%";
+            card1.description = "Increase Speed and\nDash Distance\nby 20%";
             card1.type = UpgradeType::MOVEMENT;
-            card1.weight = 10; 
+            card1.weight = 5; 
             card1.applyEffect = [](Crow& c) { c.speed *= 1.2f; };
             upgradePool.push_back(card1);
 
@@ -78,27 +78,54 @@ class LevelUpMenu {
             card2.title = "Fast Dash";
             card2.description = "Increase Dash Speed\nby 20%";
             card2.type = UpgradeType::MOVEMENT;
-            card2.weight = 10;
+            card2.weight = 5;
             card2.applyEffect = [](Crow& c) { c.dashDuration *= 0.8f; };
             upgradePool.push_back(card2);
 
-            // Blood Up (Common)
+            // Jump Up (Common)
             UpgradeCard card3;
-            card3.title = "Blood Up";
-            card3.description = "Increase Health\nby 20%";
-            card3.type = UpgradeType::BLOOD;
-            card3.weight = 10;
-            card3.applyEffect = [](Crow& c) { c.BLOOD *= 1.2f; };
+            card3.title = "Jump Up";
+            card3.description = "Increase Jump Power\nby 20%";
+            card3.type = UpgradeType::MOVEMENT;
+            card3.weight = 5;
+            card3.applyEffect = [](Crow& c) { c.jumpPower *= 1.2f; };
             upgradePool.push_back(card3);
 
-            // Attack Speed (Legendary)
+            // Blood Up (Common)
             UpgradeCard card4;
-            card4.title = "DPS Up";
-            card4.description = "Increase Attack Speed\nby 33%";
-            card4.type = UpgradeType::LEGENDARY;
-            card4.weight = 1; // 5x rarer than others
-            card4.applyEffect = [](Crow& c) { c.attackSpeed -= 1; };
+            card4.title = "Blood Up";
+            card4.description = "Increase Health\nby 20%";
+            card4.type = UpgradeType::BLOOD;
+            card4.weight = 5;
+            card4.applyEffect = [](Crow& c) { c.BLOOD *= 1.2f; };
             upgradePool.push_back(card4);
+
+            // Lifesteal Up (Common)
+            UpgradeCard card5;
+            card5.title = "Lifesteal Up";
+            card5.description = "Increase Lifesteal\nrate by 20%";
+            card5.type = UpgradeType::BLOOD;
+            card5.weight = 5;
+            card5.applyEffect = [](Crow& c) { c.lifeSteal *= 1.2f; };
+            upgradePool.push_back(card5);
+
+            // Drain Rate Down (Common)
+            UpgradeCard card6;
+            card6.title = "Drain Less";
+            card6.description = "Decrease Blood Drain \nby 10%";
+            card6.type = UpgradeType::BLOOD;
+            card6.weight = 5;
+            card6.applyEffect = [](Crow& c) { c.bloodDrainRate *= 0.9f; };
+            upgradePool.push_back(card6);
+
+            // Attack Speed (Legendary)
+            UpgradeCard card10;
+            card10.title = "DPS Up";
+            card10.description = "Increase Attack Speed\nby 33%";
+            card10.type = UpgradeType::LEGENDARY;
+            card10.weight = 1; // 5x rarer than others
+            card10.applyEffect = [](Crow& c) { c.attackSpeed -= 1; };
+            upgradePool.push_back(card10);
         }
 
         void GenerateOptions(int screenWidth, int screenHeight) {
@@ -214,13 +241,14 @@ class LevelUpMenu {
             return false;
         }
 
+        // Draw Upgrade Menu
         void Draw() {
             // Darken Background
             DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.7f));
 
             // Draw Title (Yellow -> Red -> Blue rapidly)
             float time = GetTime();
-            int colorStage = (int)(time * 2.0f) % 2; // 4.0f speed, 3 stages
+            int colorStage = (int)(time * 2.0f) % 2; // 2.0f speed, 2 stages
             
             Color titleColor;
             if (colorStage == 0) titleColor = YELLOW;

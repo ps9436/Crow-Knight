@@ -13,7 +13,14 @@
 #include "Input.hpp"
 #include "CameraManager.hpp"
 #include "HUD.hpp"
-#include "LevelUpMenu.hpp"
+#include "Upgrade.hpp"
+#include "MainMenu.hpp"
+
+enum class GameState {
+    MENU,
+    PLAYING,
+    LEVEL_UP
+};
 
 class Game {
     private:
@@ -25,7 +32,10 @@ class Game {
         CameraManager camera;
         Input input;
         HUD hud;
-        LevelUpMenu levelUpMenu;
+        Upgrade upgrade;
+        MainMenu menu;
+
+        GameState gameState = GameState::MENU;
 
         // Entities
         Crow crow;
@@ -72,7 +82,6 @@ class Game {
         float gameTime = 0.0f;
         float hitStopTimer = 0.0f;  // Freeze on hits
         float timeScale = 1.0f;     // Game speed
-        bool isLevelingUp = false;
 
         // Difficulty variables
         float goblinSpawnBase = 2.0f;   // Base goblin spawn rate (lower is faster)
@@ -148,26 +157,31 @@ class Game {
             xp.Init();
             camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
             hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
-            levelUpMenu.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+            upgrade.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+            menu.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
         }
 
         void Update() {
-            if (crow.LeveledUp()) {
-                isLevelingUp = true;
-                // Generate level up cards
-                levelUpMenu.GenerateOptions(SCREEN_WIDTH, SCREEN_HEIGHT); 
-                crow.ClearLevelUpFlag(); 
-                return;
-            }
-            if (isLevelingUp) {
-                // Update the menu logic
-                if (levelUpMenu.Update(crow)) {
-                    // Update returns true when card is clicked
-                    isLevelingUp = false; 
+            // MAIN MENU STATE
+            if (gameState == GameState::MENU) {
+                if (menu.Update()) {
+                    ResetGame();
+                    gameState = GameState::PLAYING;
                 }
                 return;
             }
 
+            // LEVEL UP STATE
+            if (gameState == GameState::LEVEL_UP) {
+                if (upgrade.Update(crow)) {
+                    // Update returns true when card is clicked
+                    crow.ClearLevelUpFlag();
+                    gameState = GameState::PLAYING;
+                }
+                return;
+            }
+
+            // PLAYING STATE
             // Handle Hit Stop Timer
             if (hitStopTimer > 0.0f) {
                 hitStopTimer -= GetFrameTime(); // Use real time to count down
@@ -179,6 +193,20 @@ class Game {
             gameTime += dt;
             goblinSpawnTimer += dt;
             orcSpawnTimer += dt;
+            
+            // Get inputs
+            InputHandler();
+            // Update player and camera
+            crow.Update(input, dt);
+            camera.Update(crow.GetPosition(), crow.GetFaceRight());
+
+            // Check Level Up transition
+            if (crow.LeveledUp()) {
+                gameState = GameState::LEVEL_UP;
+                // Generate level up cards
+                upgrade.GenerateOptions(SCREEN_WIDTH, SCREEN_HEIGHT);
+                return;
+            }
 
             // Difficulty Ramp
             // Goblin Logic (Spawns from start, gets faster forever)
@@ -186,7 +214,7 @@ class Game {
             // Factor = how quickly the spawn rate increases
             float goblinSpawnRate = goblinSpawnBase / (1.0f + (gameTime * goblinFactor));
             
-            // Hard Cap: Don't let them spawn faster than 0.1s (prevent crash)
+            // Don't let spawn faster than 0.1s
             if (goblinSpawnRate < 0.1f) goblinSpawnRate = 0.1f; 
 
             if (goblinSpawnTimer > goblinSpawnRate) {
@@ -212,12 +240,6 @@ class Game {
                     orcSpawnTimer = 0.0f;
                 }
             }
-
-            // Update Loop
-            InputHandler();
-            // Update player and camera
-            crow.Update(input, dt);
-            camera.Update(crow.GetPosition(), crow.GetFaceRight());
 
             spatialGrid.clear();
             for (size_t i = 0; i < mobs.size(); i++) {
@@ -311,7 +333,9 @@ class Game {
                 // Damage and heal logic
                 if (mobs[i]->health < oldMobHP && isHitboxActive && CheckCollisionRecs(attackBox, mobs[i]->GetHitbox())) crow.LifeSteal(mobs[i]->GetLifeStealRate());
                 if (mobs[i]->health <= 0) crow.KillPlusOne();
-                if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) crow.TakeDamage(mobs[i]->GetDamageRate());
+                if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) {
+                    crow.TakeDamage(mobs[i]->GetDamageRate());
+                }
                 if (crow.GetState() == CharacterState::DEATH) {
                     ResetGame();
                     return; // to stop current frame's logic
@@ -319,6 +343,7 @@ class Game {
             }
             float xpGained = xp.Update(crow.GetPosition(), crow.GetZPosition(), dt); 
             if (xpGained > 0) crow.GainXP(xpGained);
+            
         }
 
         void Draw() {
@@ -342,15 +367,19 @@ class Game {
             BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            BeginMode2D(camera.raylibCam);
-                DrawDebugGrid(5000, 100);
+            if (gameState == GameState::MENU) {
+                menu.Draw();
+                EndDrawing();
+                return;
+            }
 
+            BeginMode2D(camera.raylibCam);
+
+                DrawDebugGrid(5000, 100);
                 // Draw orbs
                 xp.Draw();
-                
                 // Draw characters
                 for (Character* character : renderQueue) character->Draw();
-
                 // Draw debug boxes
                 // if (crow.GetAttackBox().width > 0) DrawRectangleLinesEx(crow.GetAttackBox(), 3, RED);
                 // DrawRectangleLinesEx(crow.GetHitbox(), 3, RED);
@@ -362,13 +391,36 @@ class Game {
             DrawFPS(10, 10);
 
             // Draw HUD
-            hud.Draw(crow.GetBloodPercent(), crow.GetLifeStealPercent(), crow.GetXPPercent(), crow.GetLevel(), crow.GetKillCount(), gameTime);
+            hud.Draw(
+                crow.GetBloodPercent(),
+                crow.GetLifeStealPercent(),
+                crow.GetXPPercent(),
+                crow.GetLevel(),
+                crow.GetKillCount(),
+                gameTime
+            );
 
-            if (isLevelingUp) {
-                levelUpMenu.Draw();
-            }
+            if (gameState == GameState::LEVEL_UP) upgrade.Draw();
 
             EndDrawing();
+        }
+
+        void InputHandler() {
+             // Time management
+            if (IsKeyPressed(KEY_MINUS)) timeScale -= 0.1f;
+            if (IsKeyPressed(KEY_EQUAL)) timeScale += 0.1f;
+            if (IsKeyPressed(KEY_ZERO))  timeScale = 0.0f;
+            if (IsKeyPressed(KEY_R))     timeScale = 1.0f;
+            if (timeScale < 0.0f) timeScale = 0.0f;
+
+            // Handle player inputs
+            input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
+            input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
+            input.jumped = IsKeyPressed(KEY_SPACE);
+            input.attacked = IsKeyPressed(KEY_J);
+            input.special = IsKeyPressed(KEY_L);
+            input.dashed = IsKeyPressed(KEY_I);
+            if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
         }
 
         void ResetGame() {
@@ -392,23 +444,4 @@ class Game {
             // Clear Spatial Grid
             spatialGrid.clear();
         }
-
-        void InputHandler() {
-             // Time management
-            if (IsKeyPressed(KEY_MINUS)) timeScale -= 0.1f;
-            if (IsKeyPressed(KEY_EQUAL)) timeScale += 0.1f;
-            if (IsKeyPressed(KEY_ZERO))  timeScale = 0.0f;
-            if (IsKeyPressed(KEY_R))     timeScale = 1.0f;
-            if (timeScale < 0.0f) timeScale = 0.0f;
-
-            // Handle player inputs
-            input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
-            input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
-            input.jumped = IsKeyPressed(KEY_SPACE);
-            input.attacked = IsKeyPressed(KEY_J);
-            input.special = IsKeyPressed(KEY_L);
-            input.dashed = IsKeyPressed(KEY_I);
-            if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
-        }
-
 };

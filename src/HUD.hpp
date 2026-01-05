@@ -7,6 +7,7 @@ class HUD {
         Texture2D bloodFill;
         Texture2D lifeStealFrame;
         Texture2D lifeStealFill;
+        Texture2D lifeStealFlash;
         Texture2D XPFrame;
         Texture2D XPFill;
         Vector2 position;
@@ -27,6 +28,7 @@ class HUD {
             bloodFill = LoadTexture("assets/hud/blood-fill.png");
             lifeStealFrame = LoadTexture("assets/hud/lifesteal-border.png");
             lifeStealFill = LoadTexture("assets/hud/lifesteal-fill.png");
+            lifeStealFlash = LoadTexture("assets/hud/lifesteal-flash.png");
             XPFrame = LoadTexture("assets/hud/level-border.png");
             XPFill = LoadTexture("assets/hud/level-fill.png");
             BoldPixels = LoadFontEx("assets/BoldPixels.ttf", 16, 0, 0);
@@ -63,7 +65,11 @@ class HUD {
             float currentBlood = (bloodFill.width * bloodPercent);    // Only grab what is remaining, not the entire texture
             Rectangle fillSource = { 0.0f, 0.0f, (float)currentBlood, (float)bloodFill.height };
             Rectangle fillDest = { fillCenter, position.y, (float)currentBlood * scale, (float)bloodFill.height*scale };
-            DrawTexturePro(bloodFill, fillSource, fillDest, {0.0f, 0.0f}, 0.0f, WHITE);
+            if (bloodPercent <= 0.1) {  // Flash when low blood
+                float time = GetTime();
+                int colorStage = (int)(time * 10.0f) % 2;
+                if (colorStage == 0) DrawTexturePro(bloodFill, fillSource, fillDest, {0.0f, 0.0f}, 0.0f, WHITE);
+            } else DrawTexturePro(bloodFill, fillSource, fillDest, {0.0f, 0.0f}, 0.0f, WHITE);
 
             // Lifesteal frame
             Rectangle frameLSSource = { 0.0f, 0.0f, (float)lifeStealFrame.width, (float)lifeStealFrame.height };
@@ -73,7 +79,12 @@ class HUD {
             float currentLifesteal = (bloodFill.width * lifeStolen);  // Life steal texture width
             Rectangle stealSource = { 0.0f, 0.0f, (float)currentLifesteal, (float)lifeStealFill.height };
             Rectangle stealDest = { fillCenter, position.y, (float)currentLifesteal * scale, (float)lifeStealFill.height*scale };
-            DrawTexturePro(lifeStealFill, stealSource, stealDest, {0.0f, 0.0f}, 0.0f, WHITE);
+            if (lifeStolen >= 1) {  // Flash red when lifesteal bar full
+                float time = GetTime();
+                int colorStage = (int)(time * 8.0f) % 2;
+                if (colorStage == 0) DrawTexturePro(lifeStealFlash, stealSource, stealDest, {0.0f, 0.0f}, 0.0f, WHITE);
+                else DrawTexturePro(lifeStealFill, stealSource, stealDest, {0.0f, 0.0f}, 0.0f, WHITE);
+            } else DrawTexturePro(lifeStealFill, stealSource, stealDest, {0.0f, 0.0f}, 0.0f, WHITE);
 
             float XPCenter = (screenWidth - XPFrame.width*scale)/2.0f;
             // XP frame

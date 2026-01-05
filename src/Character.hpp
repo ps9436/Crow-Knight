@@ -3,7 +3,7 @@
 #include <map>
 #include "Animation.hpp"
 
-// Generic states shared by all playable characters
+// Generic states shared by all characters
 enum class CharacterState {
     IDLE,
     RUN,

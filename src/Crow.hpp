@@ -7,15 +7,15 @@ enum class CrowForm { UNDEAD, ALIVE };
 
 class Crow : public Character {
     private:
-        friend class LevelUpMenu;
+        friend class Upgrade;
 
         CrowForm currentForm = CrowForm::UNDEAD;
 
         // Crow Stats
         int level = 1;
         float currentXP = 0;
-        float nextLevelXP = 1;
-        int attackSpeed = 3;       // Lower is faster 3 -> 0
+        float nextLevelXP = 10;
+        int attackSpeed = 0;       // Lower is faster 3 -> 0
         float jumpPower = 500.0f;
         float speed = 300.0f;
         float BLOOD = 100.0f;
@@ -76,7 +76,7 @@ class Crow : public Character {
             currentXP = 0;
             nextLevelXP = 10;
             leveledUp = false;
-            attackSpeed = 3;
+            attackSpeed = 0;
             jumpPower = 500.0f;
             speed = 300.0f;
             BLOOD = 100.0f;
@@ -167,7 +167,7 @@ class Crow : public Character {
         void LevelUp() {
             level++;
             currentXP -= nextLevelXP; // Keep overflow XP
-            nextLevelXP *= 3.0f; // Harder to get next level
+            nextLevelXP *= 2.0f; // Harder to get next level
             
             leveledUp = true;
         }

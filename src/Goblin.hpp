@@ -23,7 +23,7 @@ class Goblin : public Mob {
         static void StaticLoad() {
             Goblin::runGoblin = LoadTexture("assets/goblin/goblin-run-Sheet.png");
             Goblin::hurtGoblin = LoadTexture("assets/goblin/goblin-hurt-Sheet.png");
-            Goblin::deadGoblin = LoadTexture("assets/goblin/goblin-death-Sheet.png");
+            Goblin::deadGoblin = LoadTexture("assets/goblin/Sprite-0002-Sheet.png");
             Goblin::shadowGoblin = LoadTexture("assets/Shadow.png");
         }
 
@@ -50,7 +50,7 @@ class Goblin : public Mob {
             goblinHURT.Init(hurtGoblin, 4, 12.0f, scale);
             animations[CharacterState::HURT] = goblinHURT;
 
-            goblinDEATH.Init(deadGoblin, 8, 8.0f, scale, false);
+            goblinDEATH.Init(deadGoblin, 9, 27.0f, scale, false);
             animations[CharacterState::DEATH] = goblinDEATH;
 
             // Default
