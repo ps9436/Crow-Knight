@@ -26,4 +26,4 @@ Clone the repository.
 
 Compile main.cpp linking against Raylib (e.g., -lraylib).
 
-Run the executable.
+Press F5 to run.
