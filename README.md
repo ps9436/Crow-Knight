@@ -1,29 +1,29 @@
-# Raylib-CPP-Starter-Template-for-VSCODE-V2
-Raylib C++ Starter Template for Visual Studio Code on Windows.
-This demo project contains a bouncing ball raylib example program.
-It works with raylib version 5.0. Tested on both Windows 10 and Windows 11.
+# Crow Knight
+A fast-paced, 2.5D action roguelike built from scratch using C++ and Raylib.
 
-# How to use this template
-1. Double click on the main.code-workspace file. This will open the template in VS Code.
-2. From the Explorer Window of VS Code navigate to the src folder and double click on the main.cpp file.
-3. Press F5 on the keyboard to compile and run the program.
+# Features
+Custom Physics Engine: Vector-based movement with friction, bounce damping, and z-axis jumping.
 
-# What's changed
-The template now uses folders for better organizion of the files. So, all the source code now lives in the src folder.
+Spatial Grid System: Optimized collision detection handling 2000+ entities at 60 FPS.
 
-# Video Tutorial
+Player AI: State-machine behaviors including idle, running, jumping, dashing, 3 different attack types with specific attack-cancel logic.
 
-<p align="center">
-  <img src="preview.jpg" alt="" width="800">
-</p>
+Mob AI: State-machine behaviors for Orcs and Goblins, including chasing, flocking, and attacking.
 
-<p align="center">
-🎥 <a href="https://www.youtube.com/watch?v=PaAcVk5jUd8">Video Tutorial on YouTube</a>
-</p>
+Progression: XP orb system with magnetism physics and a randomized card-based upgrade menu.
 
-<br>
-<br>
-<p align="center">
-| 📺 <a href="https://www.youtube.com/channel/UC3ivOTE5EgpmF2DHLBmWIWg">My YouTube Channel</a>
-| 🌍 <a href="http://www.programmingwithnick.com">My Website</a> | <br>
-</p>
+# Tech Stack
+Language: C++
+
+Library: Raylib (Rendering, Audio, Input)
+
+Architecture: Component-based entity system
+
+# How to Build
+Ensure you have a C++ compiler and Raylib installed.
+
+Clone the repository.
+
+Compile main.cpp linking against Raylib (e.g., -lraylib).
+
+Run the executable.
