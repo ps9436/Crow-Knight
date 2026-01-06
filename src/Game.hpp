@@ -15,6 +15,7 @@
 #include "HUD.hpp"
 #include "Upgrade.hpp"
 #include "MainMenu.hpp"
+#include "Blood.hpp"
 
 enum class GameState {
     MENU,
@@ -34,6 +35,7 @@ class Game {
         HUD hud;
         Upgrade upgrade;
         MainMenu menu;
+        Blood blood;
 
         GameState gameState = GameState::MENU;
 
@@ -138,6 +140,7 @@ class Game {
             Goblin::StaticUnload();
             Orc::StaticUnload();
             hud.Unload();
+            Blood::UnloadTextures();
             CloseWindow();
         }
 
@@ -159,9 +162,11 @@ class Game {
             hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
             upgrade.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
             menu.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+            Blood::LoadTextures();
         }
 
         void Update() {
+            Blood::Update(dt);
             // MAIN MENU STATE
             if (gameState == GameState::MENU) {
                 if (menu.Update()) {
@@ -343,7 +348,6 @@ class Game {
             }
             float xpGained = xp.Update(crow.GetPosition(), crow.GetZPosition(), dt); 
             if (xpGained > 0) crow.GainXP(xpGained);
-            
         }
 
         void Draw() {
@@ -379,6 +383,7 @@ class Game {
                 // Draw orbs
                 xp.Draw();
                 // Draw characters
+                Blood::Draw();
                 for (Character* character : renderQueue) character->Draw();
                 // Draw debug boxes
                 // if (crow.GetAttackBox().width > 0) DrawRectangleLinesEx(crow.GetAttackBox(), 3, RED);

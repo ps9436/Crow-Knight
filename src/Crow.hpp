@@ -27,6 +27,9 @@ class Crow : public Character {
         int killCount;
         bool leveledUp;
 
+        bool isHurt;    // For blood animation
+        bool switched;  // For switch blood animation
+
         // Dash logic
         float dashDuration = 0.15f; // How fast dash is executed
         float dashTimer = 0.0f;
@@ -39,13 +42,13 @@ class Crow : public Character {
         Texture2D idleUNDEAD; Texture2D runUNDEAD; Texture2D jumpUNDEAD;
         Texture2D idleALIVE; Texture2D runALIVE; Texture2D jumpALIVE;
         Texture2D attackSIDE; Texture2D attackUP; Texture2D attackDOWN;
-        Texture2D dashTexture;
+        Texture2D dashTexture; Texture2D hurtTexture; Texture2D switchTexture;
 
         // Animations
         Animation undeadIDLE; Animation undeadRUN; Animation undeadJUMP;
         Animation aliveIDLE; Animation aliveRUN; Animation aliveJUMP;
         Animation sideATTACK; Animation upATTACK; Animation downATTACK;
-        Animation dashAnim;
+        Animation dashAnim; Animation hurtAnim; Animation switchAnim;
 
         // Maps<state, anim> for forms
         std::map<CharacterState, Animation> undeadAnims;

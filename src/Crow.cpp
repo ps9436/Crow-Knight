@@ -16,6 +16,8 @@ void Crow::Init(Vector2 startPos, int scale) {
     attackUP    = LoadTexture("assets/crow/Charles-UpAttack-Sheet.png");
     attackDOWN  = LoadTexture("assets/crow/Charles-DownAttack-Sheet.png");
     dashTexture = LoadTexture("assets/crow/Charles-Feather-Sheet.png");
+    hurtTexture = LoadTexture("assets/crow/Charles-hurt-blood.png");
+    switchTexture = LoadTexture("assets/crow/Charles-switch-blood.png");
 
     // Load Undead animations
     undeadIDLE.Init(idleUNDEAD, 6, 8.0f, size); undeadAnims[CharacterState::IDLE] = undeadIDLE;
@@ -30,8 +32,11 @@ void Crow::Init(Vector2 startPos, int scale) {
     sideATTACK.Init(attackSIDE, 5, 20.0f, size, false); aliveAnims[CharacterState::ATTACK_SIDE] = sideATTACK;
     upATTACK.Init(attackUP, 5, 20.0f, size, false); aliveAnims[CharacterState::ATTACK_UP] = upATTACK;
     downATTACK.Init(attackDOWN, 5, 20.0f, size, false); aliveAnims[CharacterState::ATTACK_DOWN] = downATTACK;
-    // Dash animation
+
+    // Dash/blood animations
     dashAnim.Init(dashTexture, 10, 10.0f, size, false); aliveAnims[CharacterState::DASH] = dashAnim;
+    hurtAnim.Init(hurtTexture, 7, 28, 2, false);
+    switchAnim.Init(switchTexture, 6, 24, 1, false);
 
     shadow = LoadTexture("assets/Shadow.png");
     // Default
@@ -49,11 +54,28 @@ void Crow::Unload() {
     UnloadTexture(attackUP);
     UnloadTexture(attackDOWN);
     UnloadTexture(shadow);
+    UnloadTexture(dashTexture);
+    UnloadTexture(hurtTexture);
+    UnloadTexture(switchTexture);
 }
 
 void Crow::Update(Input input, float dt) {
     dashAnim.Update(dt);    // Update dash animation independent of dash
-
+    if (isHurt) {
+        hurtAnim.Update(dt);
+        if (hurtAnim.IsFinished()) {
+            hurtAnim.Reset();
+            isHurt = false;
+        }
+    }
+    if (switched) {
+        switchAnim.Update(dt);
+        if (switchAnim.IsFinished()) {
+            switchAnim.Reset();
+            switched = false;
+        }
+    }
+    
     if (currentForm == CrowForm::UNDEAD) Heal();
 
     if (currentForm == CrowForm::ALIVE && currentState != CharacterState::DEATH) {
@@ -167,6 +189,9 @@ void Crow::Update(Input input, float dt) {
     // Form switching (stabbing)`
     if (input.special) {
         Special();
+        if (currentForm == CrowForm::UNDEAD) {
+            switched = true;
+        }
     }
 
     // Update physics
@@ -186,9 +211,9 @@ void Crow::Update(Input input, float dt) {
 }
 
 void Crow::Draw() {
-    if (!dashAnim.IsFinished()) {
-        dashAnim.Draw(dashEffectPos);
-    }
+    if (!dashAnim.IsFinished()) dashAnim.Draw(dashEffectPos);
+    if (isHurt) hurtAnim.Draw(position, faceRight);
+    if (switched) switchAnim.Draw({position.x, position.y - z}, faceRight);
     Character::Draw();
 }
 
@@ -216,6 +241,7 @@ void Crow::TakeDamage(float dps) {
     if (currentState == CharacterState::DEATH) return;
     if (dps > 50.0f) dps = 50.0f; // Max take 50 damage per second
     currentBlood -= dps * GetFrameTime();
+    isHurt = true;
     if (currentBlood < 0.0f) {
         currentBlood = 0.0f;
         currentState = CharacterState::DEATH;
@@ -234,7 +260,9 @@ bool Crow::IsAlive() const {return currentBlood > 0.0f; }
 
 bool Crow::CanInterrupt(CharacterState nextState) {
     // If Idle or Running, we can do anything
-    if (currentState == CharacterState::IDLE || currentState == CharacterState::RUN) return true;
+    if (currentState == CharacterState::IDLE || 
+        currentState == CharacterState::RUN || 
+        currentState == CharacterState::HURT) return true;
     
     // If jumping, we can only attack or nothing
     if (currentState == CharacterState::JUMP) {

@@ -46,13 +46,10 @@ class Orc : public Mob {
 
             orcRUN.Init(runOrc, 4, 8.0f, scale);
             animations[CharacterState::RUN] = orcRUN;
-            
             orcHURT.Init(hurtOrc, 4, 12.0f, scale);
             animations[CharacterState::HURT] = orcHURT;
-
             orcDEATH.Init(deadOrc, 8, 8.0f, scale, false);
             animations[CharacterState::DEATH] = orcDEATH;
-
             // Default
             animations[CharacterState::IDLE] = orcRUN;
             currentState = CharacterState::RUN;
@@ -66,5 +63,9 @@ class Orc : public Mob {
 
         int GetXPValue() override {
             return 1;
+        }
+
+        void OnDeathEffect(Vector2 playerPos) override {
+            Blood::SpawnBlood(this->position, playerPos, this->size);
         }
 };

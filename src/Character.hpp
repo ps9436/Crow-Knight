@@ -24,7 +24,7 @@ class Character {
         float z = 0.0f;             // Z-axis height
         float zVelocity = 0.0f;     // Vertical (jump) velocity
         float gravity = 2000.0f;
-        bool faceRight = true;     // Should character face right (y/n)?
+        bool faceRight = true;      // Should character face right (y/n)?
         bool onGround = true;
         Color tint = WHITE;
         Texture2D shadow;

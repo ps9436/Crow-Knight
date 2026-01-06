@@ -3,6 +3,7 @@
 #include <raymath.h>
 #include "Character.hpp"
 #include "Experience.hpp"
+#include "Blood.hpp"
 
 class Mob : public Character {
     public:
@@ -125,6 +126,8 @@ class Mob : public Character {
 
             if (health <= 0) {
                 currentState = CharacterState::DEATH;
+
+                OnDeathEffect(playerPos);
                 // Reset death animation to start from frame 0
                 if (animations.count(CharacterState::DEATH)) {
                     animations[CharacterState::DEATH].Reset();
@@ -158,4 +161,6 @@ class Mob : public Character {
         virtual float GetLifeStealRate() { return lifestealRate; }
 
         virtual int GetXPValue() { return 1; }
+
+        virtual void OnDeathEffect(Vector2 playerPos) {}
     };
