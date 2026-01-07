@@ -16,6 +16,7 @@
 #include "Upgrade.hpp"
 #include "MainMenu.hpp"
 #include "Blood.hpp"
+#include "Map.hpp"
 
 enum class GameState {
     MENU,
@@ -29,6 +30,17 @@ class Game {
         const int SCREEN_WIDTH = 1600;
         const int SCREEN_HEIGHT = 900;
 
+        // Map Config
+        const int MAP_CELL_SIZE = 60;       // Size of one tile
+        const int MAP_WIDTH = 50;
+        const int MAP_HEIGHT = 50;
+
+        // Calculate Bounds
+        const float MIN_X = MAP_CELL_SIZE + 30.0f;  // +30 is buffer
+        const float MAX_X = (MAP_WIDTH - 1) * MAP_CELL_SIZE - 30.0f;
+        const float MIN_Y = MAP_CELL_SIZE + 30.0f;
+        const float MAX_Y = (MAP_HEIGHT - 1) * MAP_CELL_SIZE - 30.0f;
+
         // Systems
         CameraManager camera;
         Input input;
@@ -36,6 +48,7 @@ class Game {
         Upgrade upgrade;
         MainMenu menu;
         Blood blood;
+        BorderMap map;
 
         GameState gameState = GameState::MENU;
 
@@ -97,34 +110,115 @@ class Game {
         template <typename T>   // Generic allowing spawning for every mob
         void SpawnMob(int amount) {
             Vector2 playerPos = crow.GetPosition();
-            float left   = playerPos.x - (SCREEN_WIDTH / 2);
-            float right  = playerPos.x + (SCREEN_WIDTH / 2);
-            float top    = playerPos.y - (SCREEN_HEIGHT / 2);
-            float bottom = playerPos.y + (SCREEN_HEIGHT / 2);
+            
+            // Edges of the camera view
+            float camLeft   = playerPos.x - (SCREEN_WIDTH / 2);
+            float camRight  = playerPos.x + (SCREEN_WIDTH / 2);
+            float camTop    = playerPos.y - (SCREEN_HEIGHT / 2);
+            float camBottom = playerPos.y + (SCREEN_HEIGHT / 2);
 
-            Vector2 squadCenter = {0,0};    // Where the group of mobs spawn
-            int buffer = GetRandomValue(-50, 10); // Distance outside the screen
-            int side = GetRandomValue(0, 3);
-            if (side == 0)      squadCenter = { (float)GetRandomValue(left, right), top + buffer };
-            else if (side == 1) squadCenter = { (float)GetRandomValue(left, right), bottom + buffer };
-            else if (side == 2) squadCenter = { left + buffer, (float)GetRandomValue(top, bottom) };
-            else                squadCenter = { right + buffer, (float)GetRandomValue(top, bottom) };
+            // Valid sides 0=Top, 1=Bottom, 2=Left, 3=Right
+            std::vector<int> validSides;
 
-            // Spawn the group
+            // Space above camera?
+            if (camTop > MIN_Y + 50) validSides.push_back(0); 
+            // Space below camera?
+            if (camBottom < MAX_Y - 50) validSides.push_back(1);
+            // Space to left?
+            if (camLeft > MIN_X + 50) validSides.push_back(2);
+            // Space to right?
+            if (camRight < MAX_X - 50) validSides.push_back(3);
+            // If map is smaller than screen, allow all
+            if (validSides.empty()) {
+                validSides = {0, 1, 2, 3}; 
+            }
+
+            // Spawn group
             for (int i = 0; i < amount; i++) {
-                // Create unique pointer
-                auto newMob = std::make_unique<T>();
+                
+                // Pick a random valid side
+                int sideIndex = GetRandomValue(0, validSides.size() - 1);
+                int side = validSides[sideIndex];
 
-                // Initialize mob
+                Vector2 squadCenter = {0,0};
+                int buffer = GetRandomValue(0, 50);
+
+                // Logic to set position based on side
+                // Note: We clamp the OTHER axis to ensure it's inside the map
+                if (side == 0) { // Top
+                    squadCenter.x = (float)GetRandomValue((int)std::max(camLeft, MIN_X), (int)std::min(camRight, MAX_X));
+                    squadCenter.y = camTop - buffer; 
+                }
+                else if (side == 1) { // Bottom
+                    squadCenter.x = (float)GetRandomValue((int)std::max(camLeft, MIN_X), (int)std::min(camRight, MAX_X));
+                    squadCenter.y = camBottom + buffer;
+                }
+                else if (side == 2) { // Left
+                    squadCenter.x = camLeft - buffer;
+                    squadCenter.y = (float)GetRandomValue((int)std::max(camTop, MIN_Y), (int)std::min(camBottom, MAX_Y));
+                }
+                else if (side == 3) { // Right
+                    squadCenter.x = camRight + buffer;
+                    squadCenter.y = (float)GetRandomValue((int)std::max(camTop, MIN_Y), (int)std::min(camBottom, MAX_Y));
+                }
+
+                // Final safety clamp
+                if (squadCenter.x < MIN_X) squadCenter.x = MIN_X;
+                if (squadCenter.x > MAX_X) squadCenter.x = MAX_X;
+                if (squadCenter.y < MIN_Y) squadCenter.y = MIN_Y;
+                if (squadCenter.y > MAX_Y) squadCenter.y = MAX_Y;
+
+                // Create and Spawn
+                auto newMob = std::make_unique<T>();
                 newMob->init();
 
-                // Add random jitter for mobs to not stack
                 Vector2 jitter = { (float)GetRandomValue(-50, 50), (float)GetRandomValue(-50, 50) };
+                
+                // Apply jitter but make sure not out of bounds
+                Vector2 finalPos = Vector2Add(squadCenter, jitter);
+                if (finalPos.x < MIN_X) finalPos.x = MIN_X;
+                if (finalPos.x > MAX_X) finalPos.x = MAX_X;
+                if (finalPos.y < MIN_Y) finalPos.y = MIN_Y;
+                if (finalPos.y > MAX_Y) finalPos.y = MAX_Y;
 
-                newMob->SpawnAt(Vector2Add(squadCenter, jitter));
-
-                // Add to list
+                newMob->SpawnAt(finalPos);
                 mobs.push_back(std::move(newMob));
+            }
+        }
+
+        // Helper: Keeps any entity inside the walls
+        void EnforceBounds(Character& character) {
+            Vector2 pos = character.GetPosition();
+            
+            // We assume characters have a 'radius' or 'size' 
+            // We hardcode a generic radius (20) here, or you can use character.GetHitbox().width/2
+            float radius = 20.0f; 
+
+            bool clamped = false;
+
+            // Horizontal Checks
+            if (pos.x < MIN_X + radius) {
+                pos.x = MIN_X + radius;
+                clamped = true;
+            } 
+            else if (pos.x > MAX_X - radius) {
+                pos.x = MAX_X - radius;
+                clamped = true;
+            }
+
+            // Vertical Checks
+            if (pos.y < MIN_Y + radius) {
+                pos.y = MIN_Y + radius;
+                clamped = true;
+            }
+            else if (pos.y > MAX_Y - radius) {
+                pos.y = MAX_Y - radius;
+                clamped = true;
+            }
+
+            // Only update if we actually hit a wall
+            if (clamped) {
+                character.SetPosition(pos); // You might need to add this setter to Character.hpp!
             }
         }
 
@@ -141,6 +235,7 @@ class Game {
             Orc::StaticUnload();
             hud.Unload();
             Blood::UnloadTextures();
+            map.Unload();
             CloseWindow();
         }
 
@@ -163,6 +258,7 @@ class Game {
             upgrade.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
             menu.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
             Blood::LoadTextures();
+            map.Init();
         }
 
         void Update() {
@@ -203,6 +299,7 @@ class Game {
             InputHandler();
             // Update player and camera
             crow.Update(input, dt);
+            EnforceBounds(crow);
             camera.Update(crow.GetPosition(), crow.GetFaceRight());
 
             // Check Level Up transition
@@ -334,12 +431,13 @@ class Game {
 
                 // Pass in calculated forcel
                 mobs[i]->Update(crow.GetPosition(), isHitboxActive, attackBox, mobs[i]->pushForce, &hitStopTimer, dt);
+                EnforceBounds(*mobs[i]);
 
                 // Damage and heal logic
                 if (mobs[i]->health < oldMobHP && isHitboxActive && CheckCollisionRecs(attackBox, mobs[i]->GetHitbox())) crow.LifeSteal(mobs[i]->GetLifeStealRate());
                 if (mobs[i]->health <= 0) crow.KillPlusOne();
                 if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) {
-                    crow.TakeDamage(mobs[i]->GetDamageRate());
+                    crow.TakeDamage(0);
                 }
                 if (crow.GetState() == CharacterState::DEATH) {
                     ResetGame();
@@ -379,7 +477,9 @@ class Game {
 
             BeginMode2D(camera.raylibCam);
 
-                DrawDebugGrid(5000, 100);
+                map.Draw(MAP_WIDTH, MAP_HEIGHT, MAP_CELL_SIZE);
+
+                // DrawDebugGrid(5000, 100);
                 // Draw orbs
                 xp.Draw();
                 // Draw characters

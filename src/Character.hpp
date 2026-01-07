@@ -83,4 +83,8 @@ class Character {
         bool GetFaceRight() {
             return { faceRight };
         }
+
+        void SetPosition(Vector2 newPos) {
+            position = newPos;
+        }
 };
