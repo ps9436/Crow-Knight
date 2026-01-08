@@ -23,7 +23,7 @@ private:
         }
     }
 
-    // HELPER: Draws a single tile at a specific grid coordinate
+    // Draws a single tile at a specific grid coordinate
     void DrawTile(int x, int y, BorderType type, int cellSize) {
         if (type == EMPTY) return;
 
@@ -50,8 +50,7 @@ public:
 
     void Draw(int tilesWide, int tilesHigh, int cellSize) {
         
-        // PASS 1: DRAW WALLS ONLY
-        // We skip the corners in the loop so they don't get drawn underneath walls.
+        // Skip corners to not get drawn underneath walls
         for (int x = 0; x < tilesWide; x++) {
             for (int y = 0; y < tilesHigh; y++) {
                 
@@ -73,8 +72,7 @@ public:
             }
         }
 
-        // PASS 2: DRAW CORNERS ON TOP
-        // Since we know exactly where the corners are, we just draw them manually.
+        // Draw corners
         DrawTile(0, 0, TOP_LEFT, cellSize);
         DrawTile(tilesWide - 1, 0, TOP_RIGHT, cellSize);
         DrawTile(0, tilesHigh - 1, BOTTOM_LEFT, cellSize);

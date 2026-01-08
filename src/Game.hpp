@@ -70,28 +70,6 @@ class Game {
             return gx + (gy * 10000);
         }
 
-        // Debug grid
-        void DrawDebugGrid(int extent, int spacing) {
-            // extent = how far the grid goes in each direction
-            // spacing = the size of each tile
-            int spacingX = spacing;
-            int spacingY = spacing / 2;
-
-            // Draw Vertical Lines
-            for (int x = -extent; x <= extent; x += spacingX) {
-                // Draw lighter lines for the grid
-                Color color = (x == 0) ? BLACK : LIGHTGRAY; // Make center line Black
-                DrawLine(x, -extent, x, extent, color);
-            }
-            // Draw Horizontal Lines
-            for (int y = -extent; y <= extent; y += spacingY) {
-                Color color = (y == 0) ? BLACK : LIGHTGRAY; // Make center line Black
-                DrawLine(-extent, y, extent, y, color);
-            }
-            // Draw a Circle at absolute center (0,0) for reference
-            DrawCircle(0, 0, 5, RED);
-        }
-
         // Game state
         float dt;
         float gameTime = 0.0f;
@@ -119,7 +97,6 @@ class Game {
 
             // Valid sides 0=Top, 1=Bottom, 2=Left, 3=Right
             std::vector<int> validSides;
-
             // Space above camera?
             if (camTop > MIN_Y + 50) validSides.push_back(0); 
             // Space below camera?
@@ -169,7 +146,7 @@ class Game {
                 if (squadCenter.y > MAX_Y) squadCenter.y = MAX_Y;
 
                 // Create and Spawn
-                auto newMob = std::make_unique<T>();
+                auto newMob = std::make_unique<T>();    // A temporary smart pointer (auto deletes from memory)
                 newMob->init();
 
                 Vector2 jitter = { (float)GetRandomValue(-50, 50), (float)GetRandomValue(-50, 50) };
@@ -186,14 +163,10 @@ class Game {
             }
         }
 
-        // Helper: Keeps any entity inside the walls
+        // Keep entities inside walls
         void EnforceBounds(Character& character) {
             Vector2 pos = character.GetPosition();
-            
-            // We assume characters have a 'radius' or 'size' 
-            // We hardcode a generic radius (20) here, or you can use character.GetHitbox().width/2
-            float radius = 20.0f; 
-
+            float radius = character.GetHitbox().width/2; 
             bool clamped = false;
 
             // Horizontal Checks
@@ -216,10 +189,79 @@ class Game {
                 clamped = true;
             }
 
-            // Only update if we actually hit a wall
             if (clamped) {
-                character.SetPosition(pos); // You might need to add this setter to Character.hpp!
+                character.SetPosition(pos);
             }
+        }
+
+        void InputHandler() {
+             // Time management
+            if (IsKeyPressed(KEY_MINUS)) timeScale -= 0.1f;
+            if (IsKeyPressed(KEY_EQUAL)) timeScale += 0.1f;
+            if (IsKeyPressed(KEY_ZERO))  timeScale = 0.0f;
+            if (IsKeyPressed(KEY_R))     timeScale = 1.0f;
+            if (timeScale < 0.0f) timeScale = 0.0f;
+
+            // Handle player inputs
+            input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
+            input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
+            input.jumped = IsKeyPressed(KEY_SPACE);
+            input.attacked = IsKeyPressed(KEY_J);
+            input.special = IsKeyPressed(KEY_L);
+            input.dashed = IsKeyPressed(KEY_I);
+            if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
+        }
+
+        void ResetGame() {
+            // Reset player
+            crow.Reset(Vector2{ (float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2 });
+
+            // Clear enemies
+            mobs.clear();
+            xp.Reset();
+
+            // Reset Game State
+            gameTime = 0.0f;
+            goblinSpawnTimer = 0.0f;
+            orcSpawnTimer = 0.0f;
+            hitStopTimer = 0.0f;
+            gameState = GameState::PLAYING;
+            
+            // Reset Camera and Hud
+            camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
+            hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+            
+            // Clear Spatial Grid
+            spatialGrid.clear();
+        }
+        
+        // Debug grid
+        void DrawDebugGrid() {
+            int spacingX = MAP_CELL_SIZE * 2; 
+            int spacingY = MAP_CELL_SIZE; 
+
+            // Boundaries
+            int startX = 0 + MAP_CELL_SIZE;
+            int startY = 0;
+            int endX = (MAP_WIDTH - 1) * MAP_CELL_SIZE;
+            int endY = (MAP_HEIGHT - 1) * MAP_CELL_SIZE;
+
+            Color gridColor = Fade(LIGHTGRAY, 0.3f); 
+
+            // Draw Vertical Lines (Left -> Right)
+            for (int x = startX; x <= endX; x += spacingX) {
+                DrawLine(x, startY, x, endY, gridColor);
+            }
+
+            // Draw Horizontal Lines (Top -> Bottom)
+            for (int y = startY; y <= endY; y += spacingY) {
+                DrawLine(startX, y, endX, y, gridColor);
+            }
+
+            // Center Marker
+            int centerX = (MAP_WIDTH * CELL_SIZE) / 2;
+            int centerY = (MAP_HEIGHT * CELL_SIZE) / 2;
+            DrawCircleLines(centerX, centerY, 5, BLACK);
         }
 
     public:
@@ -241,7 +283,7 @@ class Game {
 
         void Init() {
             // Setup crow (player)
-            crow.Init(Vector2{ (float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2 });
+            crow.Init(Vector2{ (float)(MAP_WIDTH * MAP_CELL_SIZE) / 2, (float)(MAP_HEIGHT * MAP_CELL_SIZE) / 2 });
 
             // Setup enemies
             Goblin::StaticLoad();
@@ -264,7 +306,7 @@ class Game {
         void Update() {
             Blood::Update(dt);
             // MAIN MENU STATE
-            if (gameState == GameState::MENU) {
+            if (gameState == GameState::MENU || IsKeyPressed(KEY_ENTER)) {
                 if (menu.Update()) {
                     ResetGame();
                     gameState = GameState::PLAYING;
@@ -467,7 +509,7 @@ class Game {
 
             // Drawing
             BeginDrawing();
-            ClearBackground(RAYWHITE);
+            ClearBackground(BLACK);
 
             if (gameState == GameState::MENU) {
                 menu.Draw();
@@ -477,14 +519,20 @@ class Game {
 
             BeginMode2D(camera.raylibCam);
 
+                // Ground, grid, border
+                DrawRectangle(
+                    MAP_CELL_SIZE,
+                    MAP_CELL_SIZE,
+                    (MAP_WIDTH - 1) * MAP_CELL_SIZE,
+                    (MAP_HEIGHT - 1) * MAP_CELL_SIZE,
+                    {239, 245, 239, 255});
+                DrawDebugGrid();
                 map.Draw(MAP_WIDTH, MAP_HEIGHT, MAP_CELL_SIZE);
+                
+                xp.Draw();      // Draw orbs
+                Blood::Draw();  // Draw blood
+                for (Character* character : renderQueue) character->Draw(); // Draw characters
 
-                // DrawDebugGrid(5000, 100);
-                // Draw orbs
-                xp.Draw();
-                // Draw characters
-                Blood::Draw();
-                for (Character* character : renderQueue) character->Draw();
                 // Draw debug boxes
                 // if (crow.GetAttackBox().width > 0) DrawRectangleLinesEx(crow.GetAttackBox(), 3, RED);
                 // DrawRectangleLinesEx(crow.GetHitbox(), 3, RED);
@@ -508,45 +556,5 @@ class Game {
             if (gameState == GameState::LEVEL_UP) upgrade.Draw();
 
             EndDrawing();
-        }
-
-        void InputHandler() {
-             // Time management
-            if (IsKeyPressed(KEY_MINUS)) timeScale -= 0.1f;
-            if (IsKeyPressed(KEY_EQUAL)) timeScale += 0.1f;
-            if (IsKeyPressed(KEY_ZERO))  timeScale = 0.0f;
-            if (IsKeyPressed(KEY_R))     timeScale = 1.0f;
-            if (timeScale < 0.0f) timeScale = 0.0f;
-
-            // Handle player inputs
-            input.moveX = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);  // Right/Left
-            input.moveY = (IsKeyDown(KEY_S) ? 1.0f : 0.0f) - (IsKeyDown(KEY_W) ? 1.0f : 0.0f);  // Down/Up
-            input.jumped = IsKeyPressed(KEY_SPACE);
-            input.attacked = IsKeyPressed(KEY_J);
-            input.special = IsKeyPressed(KEY_L);
-            input.dashed = IsKeyPressed(KEY_I);
-            if (IsKeyPressed(KEY_U)) camera.SwitchCamera(crow.GetPosition());
-        }
-
-        void ResetGame() {
-            // Reset player
-            crow.Reset(Vector2{ (float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2 });
-
-            // Clear enemies
-            mobs.clear();
-            xp.Reset();
-
-            // Reset Game State
-            gameTime = 0.0f;
-            goblinSpawnTimer = 0.0f;
-            orcSpawnTimer = 0.0f;
-            hitStopTimer = 0.0f;
-            
-            // Reset Camera and Hud
-            camera.Init(SCREEN_WIDTH, SCREEN_HEIGHT, crow.GetPosition());
-            hud.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
-            
-            // Clear Spatial Grid
-            spatialGrid.clear();
         }
 };

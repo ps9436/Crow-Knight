@@ -308,8 +308,8 @@ class Upgrade {
                     cardColor = WHITE; // Flash Color
                 } else {
                     if (card.type == UpgradeType::BLOOD) cardColor = MAROON;
-                    else if (card.type == UpgradeType::MOVEMENT) cardColor = DARKBLUE;
-                    else if (card.type == UpgradeType::LEGENDARY) cardColor = {233, 191, 4, 255}; // Gold
+                    else if (card.type == UpgradeType::MOVEMENT) cardColor = { 0, 103, 165, 255 };  // Orb Blue
+                    else if (card.type == UpgradeType::LEGENDARY) cardColor = {233, 191, 4, 255};   // Gold
                     else cardColor = GRAY;
 
                     // Lighten if hovered

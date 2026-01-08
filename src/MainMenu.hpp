@@ -3,11 +3,28 @@
 
 class MainMenu {
     private:
+        // UI
         Font BoldPixels;
         int screenWidth;
         int screenHeight;
         Rectangle buttonRect;
+
+        // Animation
+        const int TOTAL_FLASHES = 8; 
+        const float FLASH_SPEED = 0.08f;
+        float flashTimer = 0.0f;
+        int flashCount = 0;
+        bool isWhiteFlash = false;
         bool isHovered;
+        bool pressedPlay = false;
+         
+
+        // Crow
+        Texture2D idleUNDEAD;
+        Texture2D idleALIVE;
+        Animation undeadIDLE;
+        Animation aliveIDLE;
+        int size = 10;
         
     public:
         void Init(int sWidth, int sHeight) {
@@ -20,21 +37,43 @@ class MainMenu {
             float w = 300;
             float h = 100;
             // Center button in lower half
-            buttonRect = { (float)(screenWidth - w)/2, (float)(screenHeight - h)/2 + 100, w, h };
+            buttonRect = { (float)(screenWidth - w)/2, (float)(screenHeight - h)/2 + 200, w, h };
             isHovered = false;
+
+            idleUNDEAD = LoadTexture("assets/crow/(outline)Dead-Idle-Sheet.png");
+            idleALIVE = LoadTexture("assets/crow/(outline)Idle-Sheet.png");
+            undeadIDLE.Init(idleUNDEAD, 6, 4.0f, size);
+            aliveIDLE.Init(idleALIVE, 2, 8.0f, size);
         }
 
         // Returns true if Play button is clicked
         bool Update() {
             Vector2 mouse = GetMousePosition();
             
+            aliveIDLE.Update(GetFrameTime());
+            
             if (CheckCollisionPointRec(mouse, buttonRect)) {
                 isHovered = true;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                    return true;
+                    pressedPlay = true;
+                    aliveIDLE.Init(idleALIVE, 2, 12.0f, size);
                 }
             } else {
                 isHovered = false;
+                undeadIDLE.Update(GetFrameTime());
+            }
+            if (pressedPlay) {
+                // Flash Animation Logic
+                flashTimer += GetFrameTime();
+                if (flashTimer >= FLASH_SPEED) {
+                    flashTimer = 0.0f;
+                    isWhiteFlash = !isWhiteFlash; // Toggle white/normal
+                    flashCount++;
+                    // End Animation
+                    if (flashCount >= TOTAL_FLASHES) {
+                        return true;
+                    }
+                }
             }
             return false;
         }
@@ -45,16 +84,16 @@ class MainMenu {
 
             // TITLE
             const char* title = "CROW KNIGHT";
-            float fontSize = 100;
+            float fontSize = 150;
             float spacing = 5;
             
             Vector2 textSize = MeasureTextEx(BoldPixels, title, fontSize, spacing);
-            Vector2 textPos = { (screenWidth - textSize.x)/2, (screenHeight/2) - 150 };
+            Vector2 textPos = { (screenWidth - textSize.x)/2 + 20, 150 };
             
             // Title Shadow
-            DrawTextEx(BoldPixels, title, {textPos.x-6, textPos.y+6}, fontSize, spacing, RAYWHITE);
+            DrawTextEx(BoldPixels, title, {textPos.x-6, textPos.y+6}, fontSize, spacing, MAROON);
             // Title Main (Yellow/Red flicker style or just White)
-            DrawTextEx(BoldPixels, title, textPos, fontSize, spacing, MAROON);
+            DrawTextEx(BoldPixels, title, textPos, fontSize, spacing, RAYWHITE);
 
             // PLAY BUTTON
             float yOffset = isHovered ? -10 : 0;
@@ -63,10 +102,10 @@ class MainMenu {
             Rectangle drawRect = { buttonRect.x, buttonRect.y + yOffset, buttonRect.width, buttonRect.height };
 
             // Shadow
-            DrawRectangleRec(shadowRect, RAYWHITE);
+            DrawRectangleRec(shadowRect, MAROON);
             
             // Button Body
-            Color btnColor = isHovered ? BLACK : BLACK; 
+            Color btnColor = isWhiteFlash ? BLACK : RAYWHITE; 
             DrawRectangleRec(drawRect, btnColor);
 
             // Button Text
@@ -78,7 +117,16 @@ class MainMenu {
                 drawRect.y + (drawRect.height - btnSize.y)/2 
             };
             
-            DrawTextEx(BoldPixels, btnText, {btnPos.x-3, btnPos.y+3}, btnFontSize, 2, RAYWHITE);
-            DrawTextEx(BoldPixels, btnText, btnPos, btnFontSize, 2, RED);
+            Color shadowColor = isWhiteFlash ? MAROON : BLACK; 
+            Color textColor = isWhiteFlash ? RAYWHITE : MAROON; 
+            DrawTextEx(BoldPixels, btnText, {btnPos.x-4, btnPos.y+4}, btnFontSize, 2, shadowColor);
+            DrawTextEx(BoldPixels, btnText, btnPos, btnFontSize, 2, textColor);
+
+            Vector2 drawPos = {(screenWidth/2) + 40, screenHeight/2};
+            if (pressedPlay) aliveIDLE.Draw(drawPos);
+            else {
+                if (isHovered) aliveIDLE.Draw(drawPos);
+                else           undeadIDLE.Draw(drawPos);
+            }
         }
 };

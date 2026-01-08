@@ -8,9 +8,6 @@ int main() {
 
     // Main Game Loop
     while (!WindowShouldClose()) {
-        if (IsKeyPressed(KEY_ENTER)) {
-            game.ResetGame();
-        }
         game.Update();
         game.Draw();
     }
