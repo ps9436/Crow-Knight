@@ -5,7 +5,7 @@
 
 // Generic states shared by all characters
 enum class CharacterState {
-    IDLE,
+    IDLE,       // Or spawn/wake (for mobs)
     RUN,
     JUMP,
     ATTACK_SIDE,

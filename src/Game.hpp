@@ -10,6 +10,8 @@
 #include "Crow.hpp"
 #include "Goblin.hpp"
 #include "Orc.hpp"
+#include "Golem.hpp"
+#include "Ghost.hpp"
 #include "Input.hpp"
 #include "CameraManager.hpp"
 #include "HUD.hpp"
@@ -83,6 +85,7 @@ class Game {
         float orcFactor = 0.05f; 
         float goblinSpawnTimer = 0.0f;
         float orcSpawnTimer = 0.0f;
+        float golemSpawnTimer = 0.0f;
 
         // Spawn a mob at random spot relative to player
         template <typename T>   // Generic allowing spawning for every mob
@@ -275,6 +278,8 @@ class Game {
             crow.Unload();
             Goblin::StaticUnload();
             Orc::StaticUnload();
+            Golem::StaticUnload();
+            Ghost::StaticUnload();
             hud.Unload();
             Blood::UnloadTextures();
             map.Unload();
@@ -288,6 +293,8 @@ class Game {
             // Setup enemies
             Goblin::StaticLoad();
             Orc::StaticLoad();
+            Golem::StaticLoad();
+            Ghost::StaticLoad();
             mobs.reserve(2000);
 
             // Reserve space for drawing
@@ -336,6 +343,7 @@ class Game {
             gameTime += dt;
             goblinSpawnTimer += dt;
             orcSpawnTimer += dt;
+            golemSpawnTimer += dt;
             
             // Get inputs
             InputHandler();
@@ -363,6 +371,7 @@ class Game {
 
             if (goblinSpawnTimer > goblinSpawnRate) {
                 SpawnMob<Goblin>(1); // Spawn 1 Goblin
+                SpawnMob<Ghost>(1);  // Spawn 1 Golem
                 goblinSpawnTimer = 0.0f;
             }
 

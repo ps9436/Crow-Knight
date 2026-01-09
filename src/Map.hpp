@@ -41,7 +41,7 @@ private:
 
 public:
     void Init() {
-        texture = LoadTexture("assets/map/Edited tiles.png");
+        texture = LoadTexture("assets/map/border-map.png");
     }
 
     void Unload() {

@@ -14,13 +14,13 @@ class Crow : public Character {
         // Crow Stats
         int level = 1;
         float currentXP = 0;
-        float nextLevelXP = 10;
+        float nextLevelXP = 1000;
         int attackSpeed = 0;       // Lower is faster 3 -> 0
         float jumpPower = 500.0f;
         float speed = 300.0f;
         float BLOOD = 100.0f;
         float currentBlood = 100.0f;
-        float bloodDrainRate = 5.0f;
+        float bloodDrainRate = 0.0f;
         float lifeSteal = 0.5f;     // Rate/amount of lifesteal
         float lifeStolen = 0.0f;
         
@@ -77,14 +77,14 @@ class Crow : public Character {
             // Stats reset
             level = 1;
             currentXP = 0;
-            nextLevelXP = 10;
+            nextLevelXP = 1000;
             leveledUp = false;
             attackSpeed = 0;
             jumpPower = 500.0f;
             speed = 300.0f;
             BLOOD = 100.0f;
             currentBlood = 100.0f;
-            bloodDrainRate = 5.0f;
+            bloodDrainRate = 0.0f;
             lifeSteal = 0.5f;
             lifeStolen = 0.0f;
             killCount = 0;

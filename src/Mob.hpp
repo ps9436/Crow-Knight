@@ -6,6 +6,23 @@
 #include "Blood.hpp"
 
 class Mob : public Character {
+    private:
+        // Helper for Update to move mob toward player
+        void MoveTowards(Vector2 target, Vector2 extraForce, float dt) {
+            Vector2 direction = Vector2Subtract(target, position);
+            direction = Vector2Add(direction, extraForce);
+
+            // Normalize
+            if (Vector2Length(direction) > 1.0f) {
+                direction = Vector2Normalize(direction);
+                float pps = speed * dt;
+                position = Vector2Add(position, Vector2Scale(direction, pps));
+            }
+            
+            // Update orientation
+            faceRight = (target.x > position.x);
+        }
+
     public:
         int health;
         int stunCounter = 0;    // Stun timer
@@ -19,6 +36,8 @@ class Mob : public Character {
         float immunityTimer = 0.0f;
         float deadTimer = 0.0f;
 
+        bool spawnAnim = false;
+
         // Radius for collision/spacing
         float radius;
         Vector2 pushForce = {0, 0}; // Force on each mob (chase and collisions)
@@ -29,22 +48,25 @@ class Mob : public Character {
             position = spawnPos;
             deadTimer = 0.0f;
             immunityTimer = 0.0f;
-            currentState = CharacterState::RUN;
+            currentState = CharacterState::IDLE;
 
             // Reset animations
-            if (animations.count(CharacterState::RUN)) {
-                animations[CharacterState::RUN].Reset();
+            if (animations.count(CharacterState::IDLE)) {
+                animations[CharacterState::IDLE].Reset();
             }
         }
         
         void Update(Vector2 playerPos, bool playerAttacking, Rectangle playerHitbox, Vector2 pushForce, float* globalHitStop, float dt) {
-            // float dt = GetFrameTime();
-
             // Update the animation
             if (animations.count(currentState) > 0) animations[currentState].Update(dt);
             // Decrement  immune time
             if (immunityTimer > 0.0f) immunityTimer -= dt;
 
+            // If there is a unique idle, otherwise its just run
+            if (currentState == CharacterState::IDLE) {
+                if (!spawnAnim || animations[currentState].IsFinished())
+                    currentState = CharacterState::RUN;
+            }
             // Death logic
             if (currentState == CharacterState::DEATH) {
                 deadTimer += dt;
@@ -55,12 +77,15 @@ class Mob : public Character {
                 // Apply Friction (multiply by a value < 1.0 each frame to slow down)
                 float friction = 0.90f;
                 if (weight < 1.0f) friction = 0.80f;
+                if (weight < 0.5f) friction = 0.0f;
                 knockback = Vector2Scale(knockback, friction);
 
                 // Shake effect
-                if (deadTimer < 0.2f) {
-                    if (stunCounter % 4 < 2) position.x -= 5; 
-                    else position.x += 5;
+                if (weight != 0.0f) {
+                    if (deadTimer < 0.2f) {
+                        if (stunCounter % 4 < 2) position.x -= 5; 
+                        else position.x += 5;
+                    }
                 }
                 return;     // Don't need other checks
             }
@@ -74,14 +99,18 @@ class Mob : public Character {
                 // Apply Friction (multiply by a value < 1.0 each frame to slow down)
                 float friction = 0.90f;
                 if (weight < 1.0f) friction = 0.80f;
+                if (weight < 0.5f) friction = 0.0f;
+                if (weight == 0.0f) MoveTowards(playerPos, pushForce, dt); // If ghost, move normally
                 knockback = Vector2Scale(knockback, friction);
 
                 // Shake effect
-                if (stunCounter % 4 < 2) position.x -= 5; 
-                else position.x += 5;
+                if (weight != 0.0f) {
+                    if (stunCounter % 4 < 2) position.x -= 5; 
+                    else position.x += 5;
+                }
 
                 // Stunned for 20 frames, then return to run
-                if (stunCounter >= 20) {
+                if (stunCounter >= stunAmount) {
                     currentState = CharacterState::RUN;
                     stunCounter = 0;
                     knockback = {0,0};
@@ -89,18 +118,7 @@ class Mob : public Character {
             }
             // Movement logic (run towards player)
             else if (currentState == CharacterState::RUN) {
-                Vector2 direction = Vector2Subtract(playerPos, position);
-                direction = Vector2Add(direction, pushForce);   // 
-
-                // Normalize for direction
-                if (Vector2Length(direction) > 1.0f) {
-                    direction = Vector2Normalize(direction);
-                    float pps = speed * dt;     // pixel per second
-                    position = Vector2Add(position, Vector2Scale(direction, pps));
-                }
-                
-                // Update facing
-                faceRight = (playerPos.x > position.x);
+                MoveTowards(playerPos, pushForce, dt);
             }
 
             // Check collisions

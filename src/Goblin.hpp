@@ -42,7 +42,7 @@ class Goblin : public Mob {
             weight = 1.0f;
             radius = 20.0f;
             damageRate = 20.0f;
-            lifestealRate = 1.0f;
+            lifestealRate = 0.5f;
 
             goblinRUN.Init(runGoblin, 4, 8.0f, scale);
             animations[CharacterState::RUN] = goblinRUN;
