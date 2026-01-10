@@ -5,13 +5,13 @@
 
 // Generic states shared by all characters
 enum class CharacterState {
-    IDLE,       // Or spawn/wake (for mobs)
+    IDLE,   // Or spawn/wake (for mobs)
     RUN,
     JUMP,
-    ATTACK_SIDE,
+    ATTACK_SIDE,    // Or generic attack (for mobs)
     ATTACK_UP,
     ATTACK_DOWN,
-    DASH,       // Or other (for mobs)
+    DASH,   // Or other (for mobs)
     HURT,
     DEATH
 };

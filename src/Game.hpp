@@ -12,6 +12,10 @@
 #include "Orc.hpp"
 #include "Golem.hpp"
 #include "Ghost.hpp"
+#include "Skeleton.hpp"
+#include "Necromancer.hpp"
+#include "Projectile.hpp"
+#include "Fireball.hpp"
 #include "Input.hpp"
 #include "CameraManager.hpp"
 #include "HUD.hpp"
@@ -59,6 +63,11 @@ class Game {
         Experience xp;
         std::vector<Character*> renderQueue;
         std::vector<std::unique_ptr<Mob>> mobs; // Smart Pointer replaces raw pointers (no manual deleting)
+        std::vector<std::unique_ptr<Projectile>> projectiles;
+        template <typename T>
+        void SpawnProjectile(Vector2 start, Vector2 end) {
+            projectiles.push_back(std::make_unique<T>(start, end));
+        }
 
         // Spatial grid
         // Grid maps a cell ID to a list of character (mob) indices
@@ -162,6 +171,37 @@ class Game {
                 if (finalPos.y > MAX_Y) finalPos.y = MAX_Y;
 
                 newMob->SpawnAt(finalPos);
+                mobs.push_back(std::move(newMob));
+            }
+        }
+
+        // Circular Spawn (Ring)
+        template <typename T>
+        void SpawnMobRing(Vector2 center, float radius, int amount) {
+            if (amount <= 0) return;
+
+            float angleStep = 360.0f / amount; // Distance in degrees between each enemy
+
+            for (int i = 0; i < amount; i++) {
+                float angle = i * angleStep;
+                float radian = angle * DEG2RAD; // Convert to radians for math functions
+
+                // Calculate Position: Center + (Direction * Radius)
+                Vector2 spawnPos = {
+                    center.x + cosf(radian) * radius,
+                    center.y + sinf(radian) * radius
+                };
+
+                // Clamp to Map Bounds (Reuse your existing logic)
+                if (spawnPos.x < MIN_X) spawnPos.x = MIN_X;
+                if (spawnPos.x > MAX_X) spawnPos.x = MAX_X;
+                if (spawnPos.y < MIN_Y) spawnPos.y = MIN_Y;
+                if (spawnPos.y > MAX_Y) spawnPos.y = MAX_Y;
+
+                // Create and Push
+                auto newMob = std::make_unique<T>();
+                newMob->init();
+                newMob->SpawnAt(spawnPos);
                 mobs.push_back(std::move(newMob));
             }
         }
@@ -280,6 +320,10 @@ class Game {
             Orc::StaticUnload();
             Golem::StaticUnload();
             Ghost::StaticUnload();
+            Skeleton::StaticUnload();
+            Necromancer::StaticUnload();
+            Fireball::StaticUnload();
+            projectiles.clear();
             hud.Unload();
             Blood::UnloadTextures();
             map.Unload();
@@ -295,6 +339,9 @@ class Game {
             Orc::StaticLoad();
             Golem::StaticLoad();
             Ghost::StaticLoad();
+            Skeleton::StaticLoad();
+            Necromancer::StaticLoad();
+            Fireball::StaticLoad();
             mobs.reserve(2000);
 
             // Reserve space for drawing
@@ -370,8 +417,11 @@ class Game {
             if (goblinSpawnRate < 0.1f) goblinSpawnRate = 0.1f; 
 
             if (goblinSpawnTimer > goblinSpawnRate) {
-                SpawnMob<Goblin>(1); // Spawn 1 Goblin
-                SpawnMob<Ghost>(1);  // Spawn 1 Golem
+                // SpawnMob<Goblin>(1); // Spawn 1 Goblin
+                // SpawnMob<Golem>(1);
+                // SpawnMob<Ghost>(1);
+                // SpawnMob<Skeleton>(5);
+                SpawnMob<Necromancer>(1);
                 goblinSpawnTimer = 0.0f;
             }
 
@@ -396,6 +446,7 @@ class Game {
 
             spatialGrid.clear();
             for (size_t i = 0; i < mobs.size(); i++) {
+                EnforceBounds(*mobs[i]);
                 // Don't grid dead mobs
                 if (mobs[i]->GetState() == CharacterState::DEATH) {
                     // Remove gone mobs
@@ -482,7 +533,18 @@ class Game {
 
                 // Pass in calculated forcel
                 mobs[i]->Update(crow.GetPosition(), isHitboxActive, attackBox, mobs[i]->pushForce, &hitStopTimer, dt);
-                EnforceBounds(*mobs[i]);
+
+                Necromancer* necro = dynamic_cast<Necromancer*>(mobs[i].get()); // Check to see if current mob is a necromancer
+
+                if (necro) {
+                    if (necro->requestShoot) {
+                        SpawnProjectile<Fireball>(necro->GetPosition(), crow.GetPosition());
+                    }
+                    if (necro->requestSummon) {
+                        // Spawn 5 Skeletons around her
+                        SpawnMobRing<Skeleton>(necro->GetPosition(), 100.0f, 5);
+                    }
+                }
 
                 // Damage and heal logic
                 if (mobs[i]->health < oldMobHP && isHitboxActive && CheckCollisionRecs(attackBox, mobs[i]->GetHitbox())) crow.LifeSteal(mobs[i]->GetLifeStealRate());
@@ -497,6 +559,23 @@ class Game {
             }
             float xpGained = xp.Update(crow.GetPosition(), crow.GetZPosition(), dt); 
             if (xpGained > 0) crow.GainXP(xpGained);
+
+            for (auto& p : projectiles) {
+                p->Update(dt);
+
+                // Check Collision with Player (corw can't be hurt when jumping)
+                if (crow.GetState() != CharacterState::JUMP) {
+                    if (p->active && CheckCollisionCircles(p->GetPosition(), p->GetRadius(), crow.GetPosition(), 20.0f)) {
+                        p->OnHit(crow); // Apply on hit effect
+                        p->active = false;
+                    }
+                } else continue;
+            }
+            // Cleanup projectiles
+            projectiles.erase(
+                std::remove_if(projectiles.begin(), projectiles.end(), 
+                    [](const std::unique_ptr<Projectile>& p) { return !p->active; }), 
+                projectiles.end());
         }
 
         void Draw() {
@@ -504,7 +583,9 @@ class Game {
             renderQueue.clear();
 
             // Populate render queue then sort
-            renderQueue.push_back(&crow);
+            // Check if player is currently jumping
+            bool crowJumping = (crow.GetZPosition() > 1.0f);
+            if (!crowJumping) renderQueue.push_back(&crow);
             
             float cullRadiusSqr = 1000.0f * 1000.0f;    // Don't draw enemies off screen
             for (auto& mob : mobs) {
@@ -541,11 +622,14 @@ class Game {
                 xp.Draw();      // Draw orbs
                 Blood::Draw();  // Draw blood
                 for (Character* character : renderQueue) character->Draw(); // Draw characters
-
+                for (const auto& p : projectiles) {p->Draw();
+                    // DrawCircleLines(p->GetPosition().x, p->GetPosition().y, p->GetRadius(), RED);
+                }
+                if (crowJumping) crow.Draw(); // Giving the illusion of jumping over projectiles
                 // Draw debug boxes
                 // if (crow.GetAttackBox().width > 0) DrawRectangleLinesEx(crow.GetAttackBox(), 3, RED);
                 // DrawRectangleLinesEx(crow.GetHitbox(), 3, RED);
-                // for (auto& goblin: goblins) DrawRectangleLinesEx(goblin.GetHitbox(), 3, RED);
+                // for (auto& mob : mobs) DrawRectangleLinesEx(mob->GetHitbox(), 3, RED);
 
             EndMode2D();
 

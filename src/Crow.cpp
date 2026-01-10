@@ -75,6 +75,13 @@ void Crow::Update(Input input, float dt) {
             switched = false;
         }
     }
+
+    if (rotTimer > 0.0f) {
+        rotTimer -= dt;
+        if (rotTimer <= 0.0f) bloodDrainMultiplier = 1.0f; // Reset
+    }
+    // Apply Drain
+    currentBlood -= (bloodDrainRate * bloodDrainMultiplier) * dt;
     
     if (currentForm == CrowForm::UNDEAD) Heal();
 
@@ -186,7 +193,7 @@ void Crow::Update(Input input, float dt) {
         }
     }
 
-    // Form switching (stabbing)`
+    // Form switching (stabbing)
     if (input.special) {
         Special();
         if (currentForm == CrowForm::UNDEAD) {
@@ -241,7 +248,7 @@ void Crow::TakeDamage(float dps) {
     if (currentState == CharacterState::DEATH) return;
     if (dps > 50.0f) dps = 50.0f; // Max take 50 damage per second
     currentBlood -= dps * GetFrameTime();
-    isHurt = true;
+    if (currentState != CharacterState::JUMP) isHurt = true; // Can't get hurt while jumping
     if (currentBlood < 0.0f) {
         currentBlood = 0.0f;
         currentState = CharacterState::DEATH;

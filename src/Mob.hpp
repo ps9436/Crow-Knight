@@ -6,23 +6,6 @@
 #include "Blood.hpp"
 
 class Mob : public Character {
-    private:
-        // Helper for Update to move mob toward player
-        void MoveTowards(Vector2 target, Vector2 extraForce, float dt) {
-            Vector2 direction = Vector2Subtract(target, position);
-            direction = Vector2Add(direction, extraForce);
-
-            // Normalize
-            if (Vector2Length(direction) > 1.0f) {
-                direction = Vector2Normalize(direction);
-                float pps = speed * dt;
-                position = Vector2Add(position, Vector2Scale(direction, pps));
-            }
-            
-            // Update orientation
-            faceRight = (target.x > position.x);
-        }
-
     public:
         int health;
         int stunCounter = 0;    // Stun timer
@@ -56,7 +39,7 @@ class Mob : public Character {
             }
         }
         
-        void Update(Vector2 playerPos, bool playerAttacking, Rectangle playerHitbox, Vector2 pushForce, float* globalHitStop, float dt) {
+        virtual void Update(Vector2 playerPos, bool playerAttacking, Rectangle playerHitbox, Vector2 pushForce, float* globalHitStop, float dt) {
             // Update the animation
             if (animations.count(currentState) > 0) animations[currentState].Update(dt);
             // Decrement  immune time
@@ -109,7 +92,7 @@ class Mob : public Character {
                     else position.x += 5;
                 }
 
-                // Stunned for 20 frames, then return to run
+                // Stunned for # of frames, then return to run
                 if (stunCounter >= stunAmount) {
                     currentState = CharacterState::RUN;
                     stunCounter = 0;
@@ -172,6 +155,22 @@ class Mob : public Character {
      
         virtual void Draw() override {
             Character::Draw();
+        }
+
+        // Helper for Update to move mob toward player
+        void MoveTowards(Vector2 target, Vector2 extraForce, float dt) {
+            Vector2 direction = Vector2Subtract(target, position);
+            direction = Vector2Add(direction, extraForce);
+
+            // Normalize
+            if (Vector2Length(direction) > 1.0f) {
+                direction = Vector2Normalize(direction);
+                float pps = speed * dt;
+                position = Vector2Add(position, Vector2Scale(direction, pps));
+            }
+            
+            // Update orientation
+            faceRight = (target.x > position.x);
         }
 
         virtual float GetDamageRate() { return damageRate; }

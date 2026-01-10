@@ -35,7 +35,7 @@ struct Animation {
         }
     }
 
-    void Draw(Vector2 position, bool flipH = false, Color tint = WHITE) {
+    void Draw(Vector2 position, bool flipH = false, float rotation = 0.0f, Color tint = WHITE) {
         float width = (float)texture.width / totalFrames;
         float height = (float)texture.height;
 
@@ -48,7 +48,7 @@ struct Animation {
         Rectangle dest = { position.x, position.y, width * scale, height * scale};
 
         // Instead of {0,0} to {dest.width/2,dest.height/2} for center sprite drawing
-        DrawTexturePro(texture, source, dest, {dest.width/2,dest.height/2}, 0.0f, tint);      
+        DrawTexturePro(texture, source, dest, {dest.width/2,dest.height/2}, rotation, tint);      
     }
 
     void DrawScaled(Vector2 position, float scaleMult, bool flipH = false, Color tint = WHITE) {

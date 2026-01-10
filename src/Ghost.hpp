@@ -49,7 +49,7 @@ class Ghost : public Mob {
             animations[CharacterState::HURT] = ghostHURT;
             ghostDEATH.Init(deadGhost, 9, 24.0f, scale, false);
             animations[CharacterState::DEATH] = ghostDEATH;
-            ghostWake.Init(wakeGhost, 4, 8.0f, scale, false);
+            ghostWake.Init(wakeGhost, 4, 4.0f, scale, false);
             animations[CharacterState::IDLE] = ghostWake;
 
             currentState = CharacterState::IDLE;

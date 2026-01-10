@@ -14,7 +14,7 @@ class Crow : public Character {
         // Crow Stats
         int level = 1;
         float currentXP = 0;
-        float nextLevelXP = 1000;
+        float nextLevelXP = 10;
         int attackSpeed = 0;       // Lower is faster 3 -> 0
         float jumpPower = 500.0f;
         float speed = 300.0f;
@@ -26,6 +26,8 @@ class Crow : public Character {
         
         int killCount;
         bool leveledUp;
+        float bloodDrainMultiplier = 1.0f;
+        float rotTimer = 0.0f;
 
         bool isHurt;    // For blood animation
         bool switched;  // For switch blood animation
@@ -77,10 +79,10 @@ class Crow : public Character {
             // Stats reset
             level = 1;
             currentXP = 0;
-            nextLevelXP = 1000;
+            nextLevelXP = 10;
             leveledUp = false;
             attackSpeed = 0;
-            jumpPower = 500.0f;
+            jumpPower = 800.0f;
             speed = 300.0f;
             BLOOD = 100.0f;
             currentBlood = 100.0f;
@@ -155,6 +157,11 @@ class Crow : public Character {
                 w * size,
                 h * size
             };
+        }
+
+        void ApplyBloodRot() {
+            bloodDrainMultiplier = 1.0f; // Double drain speed
+            rotTimer = 5.0f;             // Lasts 5 seconds
         }
 
         // PUT THESE IN CHARACTER.HPP !!!!!!!!111111111111
