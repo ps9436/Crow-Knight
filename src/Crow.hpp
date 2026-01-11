@@ -70,7 +70,8 @@ class Crow : public Character {
         // Combat logic
         void LifeSteal(float amount);
         void Heal();
-        void TakeDamage(float amount);
+        void TakeDamageDt(float amount);
+        void TakeInstantDamage(float amount);
         float GetBloodPercent();
         float GetLifeStealPercent();
         bool IsAlive() const;
@@ -79,13 +80,13 @@ class Crow : public Character {
             // Stats reset
             level = 1;
             currentXP = 0;
-            nextLevelXP = 10;
+            nextLevelXP = 100;
             leveledUp = false;
             attackSpeed = 0;
             jumpPower = 800.0f;
-            speed = 300.0f;
-            BLOOD = 100.0f;
-            currentBlood = 100.0f;
+            speed = 350.0f;
+            BLOOD = 500.0f;
+            currentBlood = 500.0f;
             bloodDrainRate = 0.0f;
             lifeSteal = 0.5f;
             lifeStolen = 0.0f;

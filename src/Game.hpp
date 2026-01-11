@@ -14,6 +14,7 @@
 #include "Ghost.hpp"
 #include "Skeleton.hpp"
 #include "Necromancer.hpp"
+#include "Demon.hpp"
 #include "Projectile.hpp"
 #include "Fireball.hpp"
 #include "Input.hpp"
@@ -322,6 +323,7 @@ class Game {
             Ghost::StaticUnload();
             Skeleton::StaticUnload();
             Necromancer::StaticUnload();
+            Demon::StaticUnload();
             Fireball::StaticUnload();
             projectiles.clear();
             hud.Unload();
@@ -341,6 +343,7 @@ class Game {
             Ghost::StaticLoad();
             Skeleton::StaticLoad();
             Necromancer::StaticLoad();
+            Demon::StaticLoad();
             Fireball::StaticLoad();
             mobs.reserve(2000);
 
@@ -417,11 +420,12 @@ class Game {
             if (goblinSpawnRate < 0.1f) goblinSpawnRate = 0.1f; 
 
             if (goblinSpawnTimer > goblinSpawnRate) {
-                // SpawnMob<Goblin>(1); // Spawn 1 Goblin
-                // SpawnMob<Golem>(1);
-                // SpawnMob<Ghost>(1);
+                SpawnMob<Goblin>(1); // Spawn 1 Goblin
+                SpawnMob<Golem>(1);
+                SpawnMob<Ghost>(1);
                 // SpawnMob<Skeleton>(5);
                 SpawnMob<Necromancer>(1);
+                SpawnMob<Demon>(1);
                 goblinSpawnTimer = 0.0f;
             }
 
@@ -447,16 +451,39 @@ class Game {
             spatialGrid.clear();
             for (size_t i = 0; i < mobs.size(); i++) {
                 EnforceBounds(*mobs[i]);
+
+                // Check if Demon and if it just exploded
+                Demon* demon = dynamic_cast<Demon*>(mobs[i].get());
+                if (demon && demon->exploded && !demon->dealtDamage) {
+                    float dist = Vector2Distance(crow.GetPosition(), demon->GetPosition());
+                    if (dist < demon->explosionRad) {
+                        crow.TakeInstantDamage(demon->damageInstant);
+                    }
+                    demon->dealtDamage = true;
+                }
+
+                // Check to see if current mob is a necromancer
+                Necromancer* necro = dynamic_cast<Necromancer*>(mobs[i].get());
+                if (necro) {
+                    if (necro->requestShoot) {
+                        SpawnProjectile<Fireball>(necro->GetPosition(), crow.GetPosition());
+                    }
+                    if (necro->requestSummon) {
+                        // Spawn 5 Skeletons around her
+                        SpawnMobRing<Skeleton>(necro->GetPosition(), 100.0f, 5);
+                    }
+                }
+
+                // Remove gone mobs
+                if (mobs[i]->IsDeadAndGone()) {
+                    xp.SpawnOrb(mobs[i]->GetPosition(), mobs[i]->GetXPValue());
+                    mobs[i] = std::move(mobs.back());   // Don't copy address, actually move the pointer
+                    mobs.pop_back();
+                    i--;
+                    continue; // If gone, move on
+                } 
                 // Don't grid dead mobs
                 if (mobs[i]->GetState() == CharacterState::DEATH) {
-                    // Remove gone mobs
-                    if (mobs[i]->IsDeadAndGone()) {
-                        xp.SpawnOrb(mobs[i]->GetPosition(), mobs[i]->GetXPValue());
-                        mobs[i] = std::move(mobs.back());   // Don't copy address, actually move the pointer
-                        mobs.pop_back();
-                        i--;
-                        continue; // If gone, move on
-                    } 
                     mobs[i]->Update(crow.GetPosition(), false, {0,0,0,0}, {0,0}, &hitStopTimer, dt);    // If dead but not gone
                     continue; // If dead, move on
                 }
@@ -534,23 +561,11 @@ class Game {
                 // Pass in calculated forcel
                 mobs[i]->Update(crow.GetPosition(), isHitboxActive, attackBox, mobs[i]->pushForce, &hitStopTimer, dt);
 
-                Necromancer* necro = dynamic_cast<Necromancer*>(mobs[i].get()); // Check to see if current mob is a necromancer
-
-                if (necro) {
-                    if (necro->requestShoot) {
-                        SpawnProjectile<Fireball>(necro->GetPosition(), crow.GetPosition());
-                    }
-                    if (necro->requestSummon) {
-                        // Spawn 5 Skeletons around her
-                        SpawnMobRing<Skeleton>(necro->GetPosition(), 100.0f, 5);
-                    }
-                }
-
                 // Damage and heal logic
                 if (mobs[i]->health < oldMobHP && isHitboxActive && CheckCollisionRecs(attackBox, mobs[i]->GetHitbox())) crow.LifeSteal(mobs[i]->GetLifeStealRate());
                 if (mobs[i]->health <= 0) crow.KillPlusOne();
                 if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) {
-                    crow.TakeDamage(0);
+                    crow.TakeDamageDt(mobs[i]->GetDamageRate());
                 }
                 if (crow.GetState() == CharacterState::DEATH) {
                     ResetGame();
@@ -621,7 +636,12 @@ class Game {
                 
                 xp.Draw();      // Draw orbs
                 Blood::Draw();  // Draw blood
-                for (Character* character : renderQueue) character->Draw(); // Draw characters
+                for (Character* character : renderQueue) {character->Draw(); // Draw characters
+                    // Demon* demon = dynamic_cast<Demon*>(character);
+                    // if (demon) {
+                    //     DrawCircleLines(demon->GetPosition().x, demon->GetPosition().y, demon->explosionRad, RED);
+                    // }
+                }
                 for (const auto& p : projectiles) {p->Draw();
                     // DrawCircleLines(p->GetPosition().x, p->GetPosition().y, p->GetRadius(), RED);
                 }

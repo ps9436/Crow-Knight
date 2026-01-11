@@ -52,7 +52,7 @@ class Necromancer : public Mob {
             health = 4;
             weight = 1.0f;
             radius = 25.0f;
-            damageRate = 20.0f; 
+            damageRate = 1.0f; 
             lifestealRate = 5.0f;
 
             necromancerRUN.Init(runNecromancer, 4, 8.0f, scale);

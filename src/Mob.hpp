@@ -142,7 +142,7 @@ class Mob : public Character {
             }
         }
 
-        bool IsDeadAndGone() {
+        virtual bool IsDeadAndGone() {
             if (currentState != CharacterState::DEATH) return false;
             
             // Check if the death animation has finished playing

@@ -4,7 +4,7 @@
 
 class Fireball : public Projectile {
     private:
-        float radius = 15.0f;
+        float radius = 15.0f;   // 5.0f times sprite size
     public:
         static inline Texture2D fireballTex;
 
@@ -13,14 +13,14 @@ class Fireball : public Projectile {
 
         Fireball(Vector2 start, Vector2 end) 
             : Projectile(start, end, 400.0f, 15.0f, 0.0f) {
-            animation.Init(fireballTex, 12, 12.0f, 3.0f, true);
+            animation.Init(fireballTex, 12, 12.0f, 3.0f, true); // 3.0f is sprite size
         }
 
         void OnHit(Character& target) override {
             // Special Effect (Cast to Crow)
             Crow* player = dynamic_cast<Crow*>(&target);
             if (player) {
-                player->TakeDamage(10);
+                player->TakeInstantDamage(5);
                 player->ApplyBloodRot(); 
             }
         }

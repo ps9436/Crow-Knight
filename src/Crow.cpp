@@ -244,12 +244,27 @@ void Crow::Heal() {
     }
 }
 
-void Crow::TakeDamage(float dps) {
+// Take damage over time
+void Crow::TakeDamageDt(float dps) {
     if (currentState == CharacterState::DEATH) return;
-    if (dps > 50.0f) dps = 50.0f; // Max take 50 damage per second
+    // if (dps > 50.0f) dps = 50.0f; // Max take 50 damage per second
     currentBlood -= dps * GetFrameTime();
     if (currentState != CharacterState::JUMP) isHurt = true; // Can't get hurt while jumping
     if (currentBlood < 0.0f) {
+        currentBlood = 0.0f;
+        currentState = CharacterState::DEATH;
+    }
+}
+
+// Take damage instantly
+void Crow::TakeInstantDamage(float amount) {
+    if (currentState == CharacterState::DEATH) return;
+    if (currentState == CharacterState::JUMP) return;   // Immune when jumping
+
+    currentBlood -= amount;
+    isHurt = true; // Trigger the hurt red flash
+
+    if (currentBlood <= 0.0f) {
         currentBlood = 0.0f;
         currentState = CharacterState::DEATH;
     }
