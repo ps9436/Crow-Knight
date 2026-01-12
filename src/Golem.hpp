@@ -40,7 +40,7 @@ class Golem : public Mob {
             speed = 125.0f;
             health = 10;
             weight = 0.25f;
-            radius = 30.0f;
+            radius = 35.0f;
             damageRate = 50.0f;
             lifestealRate = 1.0f;
             stunAmount = 10;

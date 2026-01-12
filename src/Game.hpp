@@ -15,6 +15,7 @@
 #include "Skeleton.hpp"
 #include "Necromancer.hpp"
 #include "Demon.hpp"
+#include "Devil.hpp"
 #include "Projectile.hpp"
 #include "Fireball.hpp"
 #include "Input.hpp"
@@ -324,6 +325,7 @@ class Game {
             Skeleton::StaticUnload();
             Necromancer::StaticUnload();
             Demon::StaticUnload();
+            Devil::StaticUnload();
             Fireball::StaticUnload();
             projectiles.clear();
             hud.Unload();
@@ -344,6 +346,7 @@ class Game {
             Skeleton::StaticLoad();
             Necromancer::StaticLoad();
             Demon::StaticLoad();
+            Devil::StaticLoad();
             Fireball::StaticLoad();
             mobs.reserve(2000);
 
@@ -420,12 +423,13 @@ class Game {
             if (goblinSpawnRate < 0.1f) goblinSpawnRate = 0.1f; 
 
             if (goblinSpawnTimer > goblinSpawnRate) {
-                SpawnMob<Goblin>(1); // Spawn 1 Goblin
-                SpawnMob<Golem>(1);
-                SpawnMob<Ghost>(1);
-                // SpawnMob<Skeleton>(5);
-                SpawnMob<Necromancer>(1);
-                SpawnMob<Demon>(1);
+                // SpawnMob<Goblin>(1); // Spawn 1 Goblin
+                // SpawnMob<Golem>(1);
+                // SpawnMob<Ghost>(1);
+                // // SpawnMob<Skeleton>(5);
+                // SpawnMob<Necromancer>(1);
+                // SpawnMob<Demon>(1);
+                SpawnMob<Devil>(1);
                 goblinSpawnTimer = 0.0f;
             }
 
@@ -451,6 +455,16 @@ class Game {
             spatialGrid.clear();
             for (size_t i = 0; i < mobs.size(); i++) {
                 EnforceBounds(*mobs[i]);
+
+                // Check if Devil and if it just exploded
+                Devil* devil = dynamic_cast<Devil*>(mobs[i].get());
+                if (devil && devil->exploded && !devil->dealtDamage) {
+                    float dist = Vector2Distance(crow.GetPosition(), devil->GetPosition());
+                    if (dist < devil->explosionRad) {
+                        crow.TakeInstantDamage(devil->damageInstant);
+                    }
+                    devil->dealtDamage = true;
+                }
 
                 // Check if Demon and if it just exploded
                 Demon* demon = dynamic_cast<Demon*>(mobs[i].get());
@@ -637,10 +651,10 @@ class Game {
                 xp.Draw();      // Draw orbs
                 Blood::Draw();  // Draw blood
                 for (Character* character : renderQueue) {character->Draw(); // Draw characters
-                    // Demon* demon = dynamic_cast<Demon*>(character);
-                    // if (demon) {
-                    //     DrawCircleLines(demon->GetPosition().x, demon->GetPosition().y, demon->explosionRad, RED);
-                    // }
+                    Devil* devil = dynamic_cast<Devil*>(character);
+                    if (devil) {
+                        DrawCircleLines(devil->GetPosition().x, devil->GetPosition().y, devil->explosionRad, RED);
+                    }
                 }
                 for (const auto& p : projectiles) {p->Draw();
                     // DrawCircleLines(p->GetPosition().x, p->GetPosition().y, p->GetRadius(), RED);
