@@ -20,7 +20,7 @@ class Fireball : public Projectile {
             // Special Effect (Cast to Crow)
             Crow* player = dynamic_cast<Crow*>(&target);
             if (player) {
-                player->TakeInstantDamage(5);
+                player->TakeInstantDamage(0);
                 player->ApplyBloodRot(); 
             }
         }

@@ -19,7 +19,7 @@ class Mob : public Character {
         float immunityTimer = 0.0f;
         float deadTimer = 0.0f;
 
-        bool spawnAnim = false;
+        bool spawnAnim = false; // For mobs to determine whether they have wake or not
 
         // Radius for collision/spacing
         float radius;
@@ -63,13 +63,13 @@ class Mob : public Character {
                 if (weight < 0.5f) friction = 0.0f;
                 knockback = Vector2Scale(knockback, friction);
 
-                // Shake effect
-                if (weight != 0.0f) {
-                    if (deadTimer < 0.2f) {
-                        if (stunCounter % 4 < 2) position.x -= 5; 
-                        else position.x += 5;
-                    }
-                }
+                // // Shake effect
+                // if (weight != 0.0f) {
+                //     if (deadTimer < 0.2f) {
+                //         if (stunCounter % 4 < 2) position.x -= 5; 
+                //         else position.x += 5;
+                //     }
+                // }
                 return;     // Don't need other checks
             }
             // Hurt logic
@@ -102,6 +102,10 @@ class Mob : public Character {
             // Movement logic (run towards player)
             else if (currentState == CharacterState::RUN) {
                 MoveTowards(playerPos, pushForce, dt);
+            }
+            // Jump logic
+            else if (currentState == CharacterState::JUMP) {
+                Character::Update(dt);
             }
 
             // Check collisions

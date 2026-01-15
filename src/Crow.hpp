@@ -80,13 +80,13 @@ class Crow : public Character {
             // Stats reset
             level = 1;
             currentXP = 0;
-            nextLevelXP = 100;
+            nextLevelXP = 30;
             leveledUp = false;
             attackSpeed = 0;
             jumpPower = 800.0f;
             speed = 350.0f;
-            BLOOD = 500.0f;
-            currentBlood = 500.0f;
+            BLOOD = 100.0f;
+            currentBlood = 100.0f;
             bloodDrainRate = 0.0f;
             lifeSteal = 0.5f;
             lifeStolen = 0.0f;

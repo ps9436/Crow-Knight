@@ -14,8 +14,11 @@
 #include "Ghost.hpp"
 #include "Skeleton.hpp"
 #include "Necromancer.hpp"
+#include "Wizard.hpp"
 #include "Demon.hpp"
 #include "Devil.hpp"
+#include "Slime.hpp"
+#include "Slimeball.hpp"
 #include "Projectile.hpp"
 #include "Fireball.hpp"
 #include "Input.hpp"
@@ -324,8 +327,11 @@ class Game {
             Ghost::StaticUnload();
             Skeleton::StaticUnload();
             Necromancer::StaticUnload();
+            Wizard::StaticUnload();
             Demon::StaticUnload();
             Devil::StaticUnload();
+            Slime::StaticUnload();
+            Slimeball::StaticUnload();
             Fireball::StaticUnload();
             projectiles.clear();
             hud.Unload();
@@ -345,8 +351,11 @@ class Game {
             Ghost::StaticLoad();
             Skeleton::StaticLoad();
             Necromancer::StaticLoad();
+            Wizard::StaticLoad();
             Demon::StaticLoad();
             Devil::StaticLoad();
+            Slime::StaticLoad();
+            Slimeball::StaticLoad();
             Fireball::StaticLoad();
             mobs.reserve(2000);
 
@@ -426,10 +435,13 @@ class Game {
                 // SpawnMob<Goblin>(1); // Spawn 1 Goblin
                 // SpawnMob<Golem>(1);
                 // SpawnMob<Ghost>(1);
-                // // SpawnMob<Skeleton>(5);
+                // SpawnMob<Skeleton>(5);
                 // SpawnMob<Necromancer>(1);
                 // SpawnMob<Demon>(1);
-                SpawnMob<Devil>(1);
+                // SpawnMob<Devil>(1);
+                // SpawnMob<Slime>(1);
+                // SpawnMob<Wizard>(1);
+                SpawnMob<Slimeball>(1);
                 goblinSpawnTimer = 0.0f;
             }
 
@@ -474,6 +486,23 @@ class Game {
                         crow.TakeInstantDamage(demon->damageInstant);
                     }
                     demon->dealtDamage = true;
+                }
+
+                // Check to see if current mob is a slime
+                Slime* slime = dynamic_cast<Slime*>(mobs[i].get());
+                if (slime) {
+                    if (slime->requestSummon) {
+                        // Spawn 5 Skeletons around her
+                        SpawnMob<Skeleton>(1);
+                    }
+                }
+
+                // Check to see if current mob is a necromancer
+                Wizard* wizard = dynamic_cast<Wizard*>(mobs[i].get());
+                if (wizard) {
+                    if (wizard->requestShoot) {
+                        SpawnProjectile<Fireball>(wizard->GetPosition(), crow.GetPosition());
+                    }
                 }
 
                 // Check to see if current mob is a necromancer
@@ -578,15 +607,13 @@ class Game {
                 // Damage and heal logic
                 if (mobs[i]->health < oldMobHP && isHitboxActive && CheckCollisionRecs(attackBox, mobs[i]->GetHitbox())) crow.LifeSteal(mobs[i]->GetLifeStealRate());
                 if (mobs[i]->health <= 0) crow.KillPlusOne();
-                if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) {
-                    crow.TakeDamageDt(mobs[i]->GetDamageRate());
-                }
+                if (mobs[i]->health > 0 && CheckCollisionRecs(crow.GetHitbox(), mobs[i]->GetHitbox())) crow.TakeDamageDt(mobs[i]->GetDamageRate());
                 if (crow.GetState() == CharacterState::DEATH) {
                     ResetGame();
                     return; // to stop current frame's logic
                 }
             }
-            float xpGained = xp.Update(crow.GetPosition(), crow.GetZPosition(), dt); 
+            float xpGained = xp.Update(crow.GetPosition(), crow.GetZPosition(), dt);
             if (xpGained > 0) crow.GainXP(xpGained);
 
             for (auto& p : projectiles) {
@@ -653,7 +680,7 @@ class Game {
                 for (Character* character : renderQueue) {character->Draw(); // Draw characters
                     Devil* devil = dynamic_cast<Devil*>(character);
                     if (devil) {
-                        DrawCircleLines(devil->GetPosition().x, devil->GetPosition().y, devil->explosionRad, RED);
+                        // DrawCircleLines(devil->GetPosition().x, devil->GetPosition().y, devil->explosionRad, RED);
                     }
                 }
                 for (const auto& p : projectiles) {p->Draw();
