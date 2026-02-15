@@ -432,7 +432,7 @@ class Game {
             if (goblinSpawnRate < 0.1f) goblinSpawnRate = 0.1f; 
 
             if (goblinSpawnTimer > goblinSpawnRate) {
-                // SpawnMob<Goblin>(1); // Spawn 1 Goblin
+                SpawnMob<Goblin>(1); // Spawn 1 Goblin
                 // SpawnMob<Golem>(1);
                 // SpawnMob<Ghost>(1);
                 // SpawnMob<Skeleton>(5);
@@ -441,7 +441,7 @@ class Game {
                 // SpawnMob<Devil>(1);
                 // SpawnMob<Slime>(1);
                 // SpawnMob<Wizard>(1);
-                SpawnMob<Slimeball>(1);
+                // SpawnMob<Slimeball>(1);
                 goblinSpawnTimer = 0.0f;
             }
 
@@ -571,32 +571,32 @@ class Game {
                 for (int x = -1; x <= 1; x++) {
                     for (int y = -1; y <= 1; y++) {
                         int neighborKey = (gx + x) + ((gy + y) * 10000);
-                            // Look up cell in unordered_map (spatialGrid)
-                            auto cellIter = spatialGrid.find(neighborKey);
-                            if (cellIter == spatialGrid.end()) continue;    // Cell is empty (no mobs)
+                        // Look up cell in unordered_map (spatialGrid)
+                        auto cellIter = spatialGrid.find(neighborKey);
+                        if (cellIter == spatialGrid.end()) continue;    // Cell is empty (no mobs)
 
-                            const std::vector<int>& neighbors = cellIter->second;   // Get the list inside the cell (bucket)
-                            for (int j : neighbors) {
-                                if (i == j) continue;   // Don't push againts self
-                                
-                                if (mobs[i]->GetState() == CharacterState::DEATH) continue;  // If neighbor dead, they don't push
+                        const std::vector<int>& neighbors = cellIter->second;   // Get the list inside the cell (bucket)
+                        for (int j : neighbors) {
+                            if (i == j) continue;   // Don't push againts self
+                            
+                            if (mobs[i]->GetState() == CharacterState::DEATH) continue;  // If neighbor dead, they don't push
 
-                                Vector2 toNeighbor = Vector2Subtract(mobs[i]->GetPosition(), mobs[j]->GetPosition());
-                                float distSqrd = Vector2LengthSqr(toNeighbor);
+                            Vector2 toNeighbor = Vector2Subtract(mobs[i]->GetPosition(), mobs[j]->GetPosition());
+                            float distSqrd = Vector2LengthSqr(toNeighbor);
 
-                                float overlapRadius = mobs[i]->radius + mobs[j]->radius;
-                                // If neighbors are overlapping (radius * 2)
-                                if (distSqrd < overlapRadius * overlapRadius) {
-                                    float dist = sqrt(distSqrd);    // Optimization: only use sqrt if actaully colliding
-                                    if (dist < 0.1f) dist = 0.1f;
+                            float overlapRadius = mobs[i]->radius + mobs[j]->radius;
+                            // If neighbors are overlapping (radius * 2)
+                            if (distSqrd < overlapRadius * overlapRadius) {
+                                float dist = sqrt(distSqrd);    // Optimization: only use sqrt if actaully colliding
+                                if (dist < 0.1f) dist = 0.1f;
 
-                                    Vector2 push = Vector2Scale(toNeighbor, 1.0f / dist);    // Create a vector pointing away from neighbor (same as normalizing)
+                                Vector2 push = Vector2Scale(toNeighbor, 1.0f / dist);    // Create a vector pointing away from neighbor (same as normalizing)
 
-                                    float strength = (overlapRadius - dist) / overlapRadius;    // Closer = stronger push
-                                    mobs[i]->pushForce = Vector2Add(mobs[i]->pushForce, Vector2Scale(push, strength * 10000.0f));
-                                }
-
+                                float strength = (overlapRadius - dist) / overlapRadius;    // Closer = stronger push
+                                mobs[i]->pushForce = Vector2Add(mobs[i]->pushForce, Vector2Scale(push, strength * 10000.0f));
                             }
+
+                        }
                     }
                 }
                 int oldMobHP = mobs[i]->health;  // For crow healing after update

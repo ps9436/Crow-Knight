@@ -75,18 +75,17 @@ void Crow::Update(Input input, float dt) {
             switched = false;
         }
     }
+    
+    if (currentForm == CrowForm::UNDEAD) Heal();
 
     if (rotTimer > 0.0f) {
         rotTimer -= dt;
         if (rotTimer <= 0.0f) bloodDrainMultiplier = 1.0f; // Reset
     }
-    // Apply Drain
-    currentBlood -= (bloodDrainRate * bloodDrainMultiplier) * dt;
-    
-    if (currentForm == CrowForm::UNDEAD) Heal();
 
     if (currentForm == CrowForm::ALIVE && currentState != CharacterState::DEATH) {
-        currentBlood -= bloodDrainRate * dt;
+        // Apply Drain
+        currentBlood -= (bloodDrainRate * bloodDrainMultiplier) * dt;
         if (currentBlood <= 0.0f) {
             currentBlood = 0.0f;
             currentState = CharacterState::DEATH;

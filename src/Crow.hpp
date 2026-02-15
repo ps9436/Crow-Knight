@@ -20,7 +20,7 @@ class Crow : public Character {
         float speed = 300.0f;
         float BLOOD = 100.0f;
         float currentBlood = 100.0f;
-        float bloodDrainRate = 0.0f;
+        float bloodDrainRate = 5.0f;
         float lifeSteal = 0.5f;     // Rate/amount of lifesteal
         float lifeStolen = 0.0f;
         
@@ -87,7 +87,7 @@ class Crow : public Character {
             speed = 350.0f;
             BLOOD = 100.0f;
             currentBlood = 100.0f;
-            bloodDrainRate = 0.0f;
+            bloodDrainRate = 5.0f;
             lifeSteal = 0.5f;
             lifeStolen = 0.0f;
             killCount = 0;
