@@ -8,9 +8,9 @@ Spatial Grid System: Optimized collision detection handling 2000+ entities at 60
 
 Player AI: State-machine behaviors including idle, running, jumping, dashing, 3 different attack types with specific attack-cancel logic.
 
-Mob AI: State-machine behaviors for Orcs and Goblins, including chasing, flocking, and attacking.
+Mob AI: State-machine behaviors for enemies, including chasing, flocking, attacking, shooting, and other special attacks!
 
-Progression: XP orb system with magnetism physics and a randomized card-based upgrade menu.
+Progression: XP orb system with orbital physics and a randomized card-based upgrade menu.
 
 # Tech Stack
 Language: C++
