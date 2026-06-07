@@ -433,15 +433,15 @@ class Game {
 
             if (goblinSpawnTimer > goblinSpawnRate) {
                 SpawnMob<Goblin>(1); // Spawn 1 Goblin
-                // SpawnMob<Golem>(1);
-                // SpawnMob<Ghost>(1);
-                // SpawnMob<Skeleton>(5);
-                // SpawnMob<Necromancer>(1);
-                // SpawnMob<Demon>(1);
-                // SpawnMob<Devil>(1);
-                // SpawnMob<Slime>(1);
-                // SpawnMob<Wizard>(1);
-                // SpawnMob<Slimeball>(1);
+                SpawnMob<Golem>(1);
+                SpawnMob<Ghost>(1);
+                SpawnMob<Skeleton>(5);
+                SpawnMob<Necromancer>(1);
+                SpawnMob<Demon>(1);
+                SpawnMob<Devil>(1);
+                SpawnMob<Slime>(1);
+                SpawnMob<Wizard>(1);
+                SpawnMob<Slimeball>(1);
                 goblinSpawnTimer = 0.0f;
             }
 
